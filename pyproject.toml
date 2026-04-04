@@ -1,0 +1,23 @@
+[project]
+name = "offerpilot"
+version = "0.1.0"
+description = "Legacy optional CLI for the OfferPilot resume and cover letter skill pack."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openai",
+    "playwright",
+    "pypdf",
+    "python-docx",
+    "reportlab",
+]
+
+[project.scripts]
+offerpilot = "offerpilot.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["offerpilot*"]
