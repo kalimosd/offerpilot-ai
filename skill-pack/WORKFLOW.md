@@ -37,6 +37,7 @@ Input handling rules:
 - If older generated drafts exist, treat them as reference only
 - If the original file is private, avoid adding it to version control
 - If the source content is sparse, improve clarity but do not invent facts
+- If the source resume includes real contact details, keep them in the final deliverable unless the user explicitly asks for anonymization or redaction
 
 ## 4. Generate the Draft
 
@@ -72,6 +73,8 @@ For cover letters:
 Check:
 
 - names
+- phone numbers
+- email addresses
 - dates
 - role titles
 - company names
@@ -104,6 +107,8 @@ Preferred order:
 - [ ] original resume used when available
 - [ ] job description included for `jd-fit diagnosis`
 - [ ] no fake achievements or fake metrics introduced
+- [ ] source contact details are preserved in the final deliverable unless anonymization was requested
+- [ ] no placeholder fields like `<name>` or `<email>` remain unless the user explicitly asked for them
 - [ ] private files kept out of git unless explicitly requested
 - [ ] English name ordering checked when relevant
 - [ ] final output matches the user's requested language and purpose

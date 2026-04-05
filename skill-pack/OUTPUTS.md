@@ -39,6 +39,8 @@ OfferPilot supports three main output types:
 - no fabricated facts
 - no inflated metrics
 - compact, interview-ready tone
+- preserves real source contact details in the final deliverable unless the user explicitly requested anonymization
+- does not leave placeholder fields such as `<name>`, `<phone number>`, or `<email>` in application-ready outputs
 
 ## Targeted Resume Expectations
 
@@ -68,10 +70,13 @@ Example:
 ## Final Review Checklist
 
 - [ ] name is correct
+- [ ] phone number is correct when present in the source
+- [ ] email address is correct when present in the source
 - [ ] dates are correct
 - [ ] titles and employer names are correct
 - [ ] content matches the intended task
 - [ ] language matches the request
 - [ ] fit conclusions are supported by resume and JD evidence
 - [ ] rewrite suggestions are concrete and truthful
+- [ ] no placeholder contact fields remain unless anonymization was explicitly requested
 - [ ] nothing confidential is accidentally included in publishable artifacts

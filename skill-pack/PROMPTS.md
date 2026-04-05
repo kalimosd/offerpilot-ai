@@ -5,10 +5,12 @@ Use these prompt rules regardless of the AI platform.
 ## Shared Constraints
 
 - preserve the candidate's real experience and intent
+- preserve real contact details from the source resume in the final deliverable unless the user explicitly requests anonymization
 - do not invent fake jobs, fake metrics, or fake credentials
 - improve clarity, structure, and credibility
 - keep outputs concise and usable for applications
 - avoid commentary such as `Improved Version`
+- do not replace real names, phone numbers, or email addresses with placeholders like `<name>` or `<email>` in local output files unless the user explicitly asks for redaction
 
 ## Resume Optimization Prompt Shape
 
@@ -69,12 +71,19 @@ For English outputs:
 - format the English name as `Given Name + Family Name`
 - do not create a western nickname
 
+## Contact Detail Handling Rules
+
+- keep source phone numbers and email addresses in the final resume when they are present and the document is intended for actual job applications
+- if privacy is a concern, avoid repeating sensitive contact details in chat summaries, but keep them in the generated local deliverable
+- only use placeholders or redaction when the user explicitly requests anonymization
+
 ## Suggested Validation Questions
 
 After generation, ask:
 
 - does every bullet map back to a real source fact?
 - is the name correct?
+- are phone number and email preserved when present in the source?
 - did the output keep the requested language?
 - did the model overstate impact beyond the source?
 - does each match or gap cite evidence from the JD or the resume?
