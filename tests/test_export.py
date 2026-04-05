@@ -1,18 +1,20 @@
 import tempfile
 import unittest
 import warnings
+import importlib.util
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
-from offerpilot.export import (
-    _extract_heading_text,
-    _get_style_config,
-    _parse_markdown_blocks,
-    _render_blocks_to_html,
-    _sanitize_pdf_text,
-    _strip_markdown_inline,
-    render_markdown_to_pdf,
+MODULE_PATH = (
+    Path(__file__).resolve().parent.parent / "skill-pack" / "scripts" / "render_pdf.py"
 )
+MODULE_SPEC = importlib.util.spec_from_file_location("offerpilot_render_pdf", MODULE_PATH)
+assert MODULE_SPEC is not None
+assert MODULE_SPEC.loader is not None
+render_pdf = importlib.util.module_from_spec(MODULE_SPEC)
+sys.modules[MODULE_SPEC.name] = render_pdf
+MODULE_SPEC.loader.exec_module(render_pdf)
 
 
 def _write_fake_pdf(path: Path, marker: bytes = b"%PDF-1.4\n") -> None:
@@ -21,26 +23,26 @@ def _write_fake_pdf(path: Path, marker: bytes = b"%PDF-1.4\n") -> None:
 
 class ExportTests(unittest.TestCase):
     def test_extract_heading_text_supports_level_three_headings(self) -> None:
-        self.assertEqual(_extract_heading_text("### **Education**"), "Education")
+        self.assertEqual(render_pdf._extract_heading_text("### **Education**"), "Education")
 
     def test_strip_markdown_inline_removes_emphasis_markers(self) -> None:
         text = "**Company** | *Role* | 2024-07 - Present"
 
-        cleaned = _strip_markdown_inline(text)
+        cleaned = render_pdf._strip_markdown_inline(text)
 
         self.assertEqual(cleaned, "Company | Role | 2024-07 - Present")
 
     def test_sanitize_pdf_text_replaces_unsupported_unicode_punctuation(self) -> None:
         text = "content‑side data – time‑series"
 
-        sanitized = _sanitize_pdf_text(text)
+        sanitized = render_pdf._sanitize_pdf_text(text)
 
         self.assertEqual(sanitized, "content-side data - time-series")
 
     def test_parse_markdown_blocks_captures_resume_structure(self) -> None:
         markdown = "# Candidate Example\nPhone: 123\n\n## Experience\n- Built tooling\n**Key Project**\n"
 
-        blocks = _parse_markdown_blocks(markdown)
+        blocks = render_pdf._parse_markdown_blocks(markdown)
 
         self.assertEqual(
             [(block.kind, block.level, block.text) for block in blocks],
@@ -61,11 +63,11 @@ class ExportTests(unittest.TestCase):
             "## Experience\n"
             "- 使用 **Perfetto** / *Systrace* 分析\n"
         )
-        blocks = _parse_markdown_blocks(markdown)
+        blocks = render_pdf._parse_markdown_blocks(markdown)
 
-        html = _render_blocks_to_html(
+        html = render_pdf._render_blocks_to_html(
             blocks,
-            style_config=_get_style_config("classic", "resume"),
+            style_config=render_pdf._get_style_config("classic", "resume"),
             document_type="resume",
             style="classic",
         )
@@ -90,12 +92,12 @@ class ExportTests(unittest.TestCase):
                 _write_fake_pdf(path, marker=b"%PDF-browser\n")
 
             with patch(
-                "offerpilot.export._render_html_to_pdf_with_playwright",
+                "offerpilot_render_pdf._render_html_to_pdf_with_playwright",
                 side_effect=fake_browser_renderer,
             ) as browser_renderer, patch(
-                "offerpilot.export._render_markdown_to_pdf_with_reportlab"
+                "offerpilot_render_pdf._render_markdown_to_pdf_with_reportlab"
             ) as fallback_renderer:
-                saved_path = render_markdown_to_pdf(markdown, str(output_path))
+                saved_path = render_pdf.render_markdown_to_pdf(markdown, str(output_path))
 
             self.assertTrue(saved_path.exists())
             self.assertIn(b"%PDF-browser", saved_path.read_bytes())
@@ -123,13 +125,13 @@ class ExportTests(unittest.TestCase):
             with warnings.catch_warnings(record=True) as caught:
                 warnings.simplefilter("always")
                 with patch(
-                    "offerpilot.export._render_html_to_pdf_with_playwright",
+                    "offerpilot_render_pdf._render_html_to_pdf_with_playwright",
                     side_effect=RuntimeError("Chromium missing"),
                 ) as browser_renderer, patch(
-                    "offerpilot.export._render_markdown_to_pdf_with_reportlab",
+                    "offerpilot_render_pdf._render_markdown_to_pdf_with_reportlab",
                     side_effect=fake_fallback_renderer,
                 ) as fallback_renderer:
-                    saved_path = render_markdown_to_pdf(
+                    saved_path = render_pdf.render_markdown_to_pdf(
                         markdown,
                         str(output_path),
                         document_type="cover_letter",

@@ -1,5 +1,9 @@
+#!/usr/bin/env python3
+"""Render OfferPilot markdown outputs to PDF."""
+
 from __future__ import annotations
 
+import argparse
 import re
 import warnings
 from dataclasses import dataclass
@@ -34,6 +38,27 @@ UNICODE_PDF_SAFE_TRANSLATION = str.maketrans(
         "\u2026": "...",
     }
 )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Render OfferPilot markdown-like content to PDF."
+    )
+    parser.add_argument("input", help="Path to the markdown or text source file.")
+    parser.add_argument("output", help="Path to the output PDF file.")
+    parser.add_argument(
+        "--document-type",
+        choices=["resume", "cover_letter"],
+        default="resume",
+        help="Document type to render. Default: resume.",
+    )
+    parser.add_argument(
+        "--style",
+        choices=["classic", "ats", "compact"],
+        default="classic",
+        help="PDF style to use. Default: classic.",
+    )
+    return parser
 
 
 def render_markdown_to_pdf(
@@ -625,3 +650,24 @@ def _get_style_config(style: str, document_type: str) -> dict:
         )
 
     return base
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    input_path = Path(args.input)
+    if not input_path.exists():
+        raise SystemExit(f"ERROR: file not found: {input_path}")
+
+    markdown_text = input_path.read_text(encoding="utf-8")
+    render_markdown_to_pdf(
+        markdown_text,
+        args.output,
+        document_type=args.document_type,
+        style=args.style,
+    )
+    print(f"OK: rendered PDF to {args.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

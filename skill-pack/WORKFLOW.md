@@ -8,6 +8,7 @@ Choose one of:
 
 - general resume optimization
 - job-targeted resume rewrite
+- jd-fit diagnosis
 - cover letter generation
 
 ## 2. Collect Inputs
@@ -20,6 +21,7 @@ Minimum inputs:
 Additional inputs when needed:
 
 - job description for targeted resumes
+- job description for jd-fit diagnosis
 - job description for cover letters
 - user-provided preferred romanization of the candidate name
 
@@ -37,6 +39,14 @@ Input handling rules:
 - If the source content is sparse, improve clarity but do not invent facts
 
 ## 4. Generate the Draft
+
+For jd-fit diagnosis:
+
+- extract the core requirements from the JD
+- identify direct evidence from the resume
+- separate matched, partial, and missing signals
+- explain the biggest fit gaps in practical language
+- prioritize concrete rewrite suggestions
 
 For resume optimization:
 
@@ -68,6 +78,8 @@ Check:
 - section ordering
 - factual consistency
 - language consistency
+- whether the fit conclusion is supported by evidence from both the JD and the resume
+- whether rewrite suggestions are specific enough to act on
 
 If the draft is in English and the source name is Chinese:
 
@@ -90,6 +102,7 @@ Preferred order:
 
 - [ ] correct task type selected
 - [ ] original resume used when available
+- [ ] job description included for `jd-fit diagnosis`
 - [ ] no fake achievements or fake metrics introduced
 - [ ] private files kept out of git unless explicitly requested
 - [ ] English name ordering checked when relevant

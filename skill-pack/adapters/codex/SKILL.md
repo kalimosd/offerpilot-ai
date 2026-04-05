@@ -1,6 +1,6 @@
 ---
 name: offerpilot-codex-adapter
-description: Use the OfferPilot skill pack for resume optimization, job-targeted rewrites, and cover-letter workflows in Codex-style repository agents. Use when local files such as resumes or job descriptions need to be transformed into stronger application materials.
+description: Use the OfferPilot skill pack for resume optimization, China-first JD fit diagnosis, job-targeted rewrites, and cover-letter workflows in Codex-style repository agents. Use when local files such as resumes or job descriptions need to be transformed into stronger application materials or diagnosed for role fit.
 ---
 
 # Codex Adapter
@@ -11,9 +11,10 @@ This adapter points Codex-style agents to the shared OfferPilot workflow.
 
 1. `../../README.md`
 2. `../../WORKFLOW.md`
-3. `../../INPUTS.md`
-4. `../../PROMPTS.md`
-5. `../../OUTPUTS.md`
+3. if the task is China-first JD matching, read `../../JD_MATCHING.md`
+4. `../../INPUTS.md`
+5. `../../PROMPTS.md`
+6. `../../OUTPUTS.md`
 
 ## Operating Rules
 

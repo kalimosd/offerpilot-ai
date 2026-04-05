@@ -1,6 +1,6 @@
 ---
 name: offerpilot-cursor-adapter
-description: Use the OfferPilot skill pack for resume optimization, job-targeted resume rewrites, and cover letters in Cursor or other repository-local coding agents. Use when the user asks to improve resumes, tailor resumes to a job description, or create cover letters from local files.
+description: Use the OfferPilot skill pack for resume optimization, China-first JD fit diagnosis, job-targeted resume rewrites, and cover letters in Cursor or other repository-local coding agents. Use when the user asks to improve resumes, analyze fit to a job description, tailor resumes to a job description, or create cover letters from local files.
 ---
 
 # Cursor Adapter
@@ -11,13 +11,15 @@ This adapter is a thin wrapper over the platform-agnostic OfferPilot skill pack.
 
 1. `../../README.md`
 2. `../../WORKFLOW.md`
-3. `../../INPUTS.md`
-4. `../../PROMPTS.md`
-5. `../../OUTPUTS.md`
+3. if the task is China-first JD matching, read `../../JD_MATCHING.md`
+4. `../../INPUTS.md`
+5. `../../PROMPTS.md`
+6. `../../OUTPUTS.md`
 
 ## When To Use
 
 - resume optimization
+- China-first JD fit diagnosis
 - targeted resume rewriting
 - cover letter generation
 - multilingual application material cleanup

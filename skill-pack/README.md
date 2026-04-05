@@ -2,24 +2,28 @@
 
 This directory contains the portable, platform-agnostic version of OfferPilot.
 
-Use it when you want to diagnose resumes, optimize resumes, tailor resumes to job descriptions, or draft cover letters with an AI agent, without depending on the repository's legacy CLI.
+Use it when you want to diagnose resumes, analyze JD fit, optimize resumes, tailor resumes to job descriptions, or draft cover letters with an AI agent. This directory is the primary product surface of the repository.
 
 ## Start Order
 
 1. Read `WORKFLOW.md`
 2. Check `INPUTS.md`
-3. Use `PROMPTS.md` for generation guidance
-4. Validate against `OUTPUTS.md`
-5. Pick an adapter from `adapters/` if your agent supports repository-local skills
+3. If the task is China-first JD matching, read `JD_MATCHING.md`
+4. Use `PROMPTS.md` for generation guidance
+5. Validate against `OUTPUTS.md`
+6. Pick an adapter from `adapters/` if your agent supports repository-local skills
+7. Check `scripts/README.md` when local helper scripts are needed
 
 ## What Is Inside
 
 - `WORKFLOW.md`: task flow and checkpoints
+- `JD_MATCHING.md`: China-first JD matching method and output expectations
 - `INPUTS.md`: source selection and privacy rules
 - `OUTPUTS.md`: expected output shapes and quality checks
 - `PROMPTS.md`: reusable prompt patterns and constraints
+- `data/`: reusable supporting data such as China-first skill alias mappings
 - `examples/`: example usage for different job-application tasks
-- `scripts/`: text extraction and optional validation helpers
+- `scripts/`: text extraction, PDF rendering, and optional validation helpers
 - `adapters/`: thin platform-specific wrappers
 
 ## Design Rules
@@ -35,11 +39,14 @@ Use it when you want to diagnose resumes, optimize resumes, tailor resumes to jo
 - If the source is `.txt` or `.md` and the agent can read it directly, use the file as-is
 - If the source is `.pdf` or `.docx` and the agent cannot reliably read it natively, run `python3 skill-pack/scripts/extract_text.py "path/to/file"` before drafting
 - Use the extracted text as the working source for prompting, review, and validation
+- Use `python3 skill-pack/scripts/render_pdf.py "input.md" "output.pdf"` when a local PDF export step is needed
+- Use `data/skill_aliases.zh-en.json` as a small China-first seed mapping for bilingual skill normalization
 - `validate_inputs.py` and `validate_outputs.py` remain optional checks; `extract_text.py` is the required helper when native file reading is unavailable
 
 ## Recommended Flow
 
 - Use diagnosis first when the user is unsure whether the resume should be rewritten or merely tightened
+- Use jd-fit diagnosis first when a China-first user wants to know whether the resume matches a specific JD and what to change
 - Use optimization when the user wants a stronger general-purpose resume
 - Use targeted rewriting when a specific job description is available
 - Use cover letter generation only after the resume and target role are clear

@@ -1,7 +1,7 @@
 [project]
 name = "offerpilot"
 version = "0.1.0"
-description = "Legacy optional CLI for the OfferPilot resume and cover letter skill pack."
+description = "Skill-first workflow pack for resume diagnosis, JD fit analysis, targeted rewrites, and cover letters."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -12,12 +12,6 @@ dependencies = [
     "reportlab",
 ]
 
-[project.scripts]
-offerpilot = "offerpilot.cli:main"
-
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-include = ["offerpilot*"]

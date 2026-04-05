@@ -1,59 +1,49 @@
-# Migration to Skill-First
+# Skill-First Repository Notes
 
-## Why This Repository Changed
+## Status
 
-OfferPilot started as a CLI-first project for resume optimization and cover letters.
+OfferPilot has completed its shift from a CLI-first repository to a skill-first repository.
 
-The repository is moving toward a skill-first structure so that:
+The repository no longer exposes a product-level CLI entry point. The recommended and supported way to use OfferPilot is through `skill-pack/` and its agent adapters.
 
-- people can download and reuse the workflow without depending on one local CLI
-- the core value lives in prompts, rules, and workflows rather than a single runtime
-- multiple repository-based AI agents can use the same skill pack
+## Primary Surface
 
-## New Primary Surface
-
-The primary product surface is now:
+The main product surface is now:
 
 - `skill-pack/README.md`
 - `skill-pack/WORKFLOW.md`
+- `skill-pack/JD_MATCHING.md`
 - `skill-pack/INPUTS.md`
 - `skill-pack/OUTPUTS.md`
 - `skill-pack/PROMPTS.md`
+- `skill-pack/examples/`
 - `skill-pack/adapters/`
+- `skill-pack/scripts/`
 
-## Current Role of the Python Code
+## Role of the Python Code
 
-The code under `offerpilot/` still exists, but it should be treated as a legacy compatibility layer rather than the center of the project.
+The legacy `offerpilot/` package has now been removed.
 
-Relevant legacy files:
+Helper implementation now lives under `skill-pack/scripts/` when it is still useful to the workflow, such as:
 
-- `offerpilot/cli.py`
-- `offerpilot/resume.py`
-- `offerpilot/cover.py`
-- `offerpilot/export.py`
-- `pyproject.toml`
+- text extraction
+- PDF rendering
+- lightweight validation
 
-The current PDF export path in `offerpilot/export.py` now prefers HTML/CSS rendered through Playwright + Chromium, with a temporary ReportLab fallback kept for compatibility while the browser-based path stabilizes.
+New product capabilities should land in `skill-pack/` first and should follow the shared workflow documents rather than introducing a parallel Python product layer.
 
-## Current Role of Tests
+## Packaging Guidance
 
-The current tests under `tests/` mostly validate the legacy Python implementation. They may still be useful while the compatibility layer remains, but they are no longer the main expression of repository value.
+`pyproject.toml` remains in the repository for Python dependency management and local module organization.
 
-## Planned Cleanup Path
+It should not be treated as a sign that OfferPilot is still a CLI product.
 
-Short term:
+## Test Guidance
 
-- keep the legacy CLI runnable
-- keep tests for the legacy layer
-- move new documentation and platform guidance into `skill-pack/`
-- document that browser-based PDF export requires `playwright install chromium`
+The current tests under `tests/` validate helper scripts that still matter to the workflow.
 
-Later:
-
-- decide whether to archive or remove `offerpilot/`
-- decide whether to keep `pyproject.toml` only for helper scripts or remove packaging entirely
-- decide whether `tests/` should focus on script validation rather than CLI behavior
+They are useful as implementation checks, but they are not the primary expression of OfferPilot's value. The primary value lives in the shared workflow docs, prompts, examples, and adapters inside `skill-pack/`.
 
 ## Publishing Guidance
 
-If this repository is later split into a standalone product, `skill-pack/` should become the main distributable artifact and the adapter directories should remain thin wrappers over the shared workflow docs.
+If this repository is later split into a standalone distributable artifact, `skill-pack/` should remain the main package and the adapter directories should stay thin wrappers over the shared workflow docs.

@@ -21,7 +21,6 @@ OfferPilot 适合下面这几类使用场景：
 - 面向多语言求职材料的提示词规则
 - 适配 Cursor、Codex 风格 agent 和 Claude Code 风格 agent 的适配器
 - 用于文本提取、输入校验和输出检查的辅助脚本
-- 暂时保留、仅作为兼容层存在的旧版 Python CLI
 
 ## 快速上手
 
@@ -34,6 +33,8 @@ OfferPilot 适合下面这几类使用场景：
 5. 在 `skill-pack/adapters/` 下选择适合你所用 AI agent 的适配器
 6. 如果 agent 不能可靠读取 `.pdf` 或 `.docx`，先运行 `python3 skill-pack/scripts/extract_text.py "path/to/file"`
 7. 仅在确实需要校验时，再运行 `skill-pack/scripts/` 下的可选脚本
+
+OfferPilot 不再提供产品级 CLI 入口。仓库主入口和推荐使用方式都是 `skill-pack/`。
 
 ## 从这里开始
 
@@ -82,35 +83,29 @@ OfferPilot 适合下面这几类使用场景：
 ├── skill-pack/
 │   ├── README.md
 │   ├── WORKFLOW.md
+│   ├── JD_MATCHING.md
 │   ├── INPUTS.md
 │   ├── OUTPUTS.md
 │   ├── PROMPTS.md
+│   ├── data/
+│   │   └── skill_aliases.zh-en.json
 │   ├── adapters/
 │   │   ├── claude-code/
 │   │   ├── codex/
 │   │   └── cursor/
 │   ├── examples/
 │   │   ├── cover-letter.md
+│   │   ├── jd-fit-zh.md
 │   │   ├── resume-optimization.md
 │   │   └── targeted-resume.md
 │   └── scripts/
+│       ├── README.md
 │       ├── extract_text.py
+│       ├── render_pdf.py
 │       ├── validate_inputs.py
 │       └── validate_outputs.py
-├── offerpilot/
-│   ├── cli.py
-│   ├── config.py
-│   ├── cover.py
-│   ├── export.py
-│   ├── io.py
-│   ├── llm.py
-│   └── resume.py
 └── tests/
-    ├── test_cover.py
     ├── test_export.py
-    ├── test_io.py
-    ├── test_llm.py
-    └── test_resume.py
 ```
 
 ## 核心原则
@@ -151,7 +146,7 @@ OfferPilot 主要面向仓库本地运行的 AI agent，包括：
 
 ## PDF 导出说明
 
-当前仓库中的 PDF 导出优先使用 `HTML/CSS + Chromium` 浏览器渲染，而不是只依赖传统的 ReportLab 文本绘制。
+当前仓库中的 PDF 导出脚本位于 `skill-pack/scripts/render_pdf.py`，优先使用 `HTML/CSS + Chromium` 浏览器渲染，而不是只依赖传统的 ReportLab 文本绘制。
 
 这样做的主要原因是：
 
@@ -166,24 +161,14 @@ OfferPilot 主要面向仓库本地运行的 AI agent，包括：
 
 在 Chromium 不可用时，仓库中仍暂时保留 ReportLab fallback 作为兼容兜底。
 
-## 旧版 CLI
-
-`offerpilot/` 下的 Python 包和 `offerpilot` 命令目前仍然保留，用作从 CLI-first 形态迁移过程中的兼容层。
-
-如果你需要旧的执行路径，可以查看：
-
-- `offerpilot/cli.py`
-- `pyproject.toml`
-
-这个旧版兼容层已经不再是项目的主要产品入口。
-
 ## 项目状态
 
 这个仓库当前的主入口是 `skill-pack/`。
 
 - 如果你想直接复用能力，优先从 `skill-pack/` 开始
-- 如果你想看兼容层实现或本地 CLI 入口，再看 `offerpilot/`
-- `offerpilot/` 和 `tests/` 目前仍保留，主要用于兼容与验证，不再代表项目的核心产品形态
+- OfferPilot 不再提供产品级 CLI
+- 与 skill 无关的旧 Python 产品层已移除，辅助脚本统一放在 `skill-pack/scripts/`
+- `skill-pack/data/` 用来放这类可复用的小型支持数据，例如中英技能别名表
 
 ## 示例文件
 
