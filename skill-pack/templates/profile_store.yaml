@@ -1,0 +1,56 @@
+# Profile Datastore Template
+#
+# Fill in your career materials below.
+# The more tagged bullets you add, the better the agent can select
+# and assemble a targeted resume for each JD.
+#
+# See skill-pack/DATASTORE.md for field reference.
+
+meta:
+  name: ""
+  name_en: ""        # optional, Given Name Family Name
+  email: ""          # optional
+  phone: ""          # optional
+  updated: ""
+
+experience:
+  - company: ""
+    role: ""
+    start: ""        # YYYY-MM
+    end: ""          # YYYY-MM or "present"
+    bullets:
+      - text: ""
+        tags: []
+        impact: ""   # quantified / qualitative / context-only
+        # variants:  # optional, uncomment to add
+        #   management: ""
+        #   technical: ""
+
+projects:
+  - name: ""
+    context: ""      # brief background, e.g. "internal tool for 200 ops staff"
+    bullets:
+      - text: ""
+        tags: []
+        impact: ""
+
+skills:
+  - name: ""
+    level: ""        # familiar / proficient / expert
+    years: 0
+    evidence: []     # list of concrete uses
+
+education:
+  - school: ""
+    degree: ""
+    major: ""
+    start: ""
+    end: ""
+
+certifications: []
+  # - name: ""
+  #   year: ""
+
+achievements: []
+  # - text: ""
+  #   tags: []

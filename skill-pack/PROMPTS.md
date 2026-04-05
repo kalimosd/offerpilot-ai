@@ -27,10 +27,18 @@ Use a prompt that asks the model to:
 
 Use a prompt that asks the model to:
 
-- tailor the resume toward the provided job description
-- surface matching skills and responsibilities
-- emphasize the most relevant experience first
-- stay truthful to the source
+- if a profile datastore is provided:
+  - parse the JD to extract core requirements
+  - match requirements against tagged bullets in the datastore
+  - prefer bullets with higher impact level when relevance is equal
+  - select the best variant for each bullet based on the target role type
+  - assemble selected bullets into a coherent resume
+  - do not include unmatched bullets just to fill space
+- if no datastore is provided:
+  - tailor the resume toward the provided job description
+  - surface matching skills and responsibilities
+  - emphasize the most relevant experience first
+  - stay truthful to the source
 
 ## JD-Fit Diagnosis Prompt Shape
 
@@ -83,7 +91,9 @@ For English outputs:
 
 After generation, ask:
 
-- does every bullet map back to a real source fact?
+- does every bullet map back to a real source fact or a datastore entry?
+- if a datastore was used, were the selected bullets relevant to the JD?
+- were low-relevance bullets correctly excluded instead of forced in?
 - is the name correct?
 - are phone number and email preserved when present in the source?
 - were missing contact details left absent instead of being guessed or fabricated?

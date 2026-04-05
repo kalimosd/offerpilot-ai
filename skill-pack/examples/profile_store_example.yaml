@@ -1,0 +1,127 @@
+# Profile Datastore Example
+#
+# This file uses anonymous placeholder data for demonstration.
+# See skill-pack/DATASTORE.md for field reference.
+
+meta:
+  name: "候选人A"
+  name_en: "Zhiming Wang"
+  email: "example@example.com"
+  phone: "+86-100-0000-0000"
+  updated: "2026-04-05"
+
+experience:
+  - company: "某科技公司"
+    role: "后端开发工程师"
+    start: "2023-06"
+    end: "present"
+    bullets:
+      - text: "设计并实现订单系统分库分表方案，支撑日均 500 万订单处理"
+        tags: [system-design, distributed-systems, sql]
+        impact: quantified
+      - text: "主导单体应用向微服务架构迁移，拆分为 12 个独立服务"
+        tags: [microservices, system-design, leadership]
+        impact: quantified
+        variants:
+          management: "规划并推动微服务拆分路线图，协调 3 个团队完成 12 个服务的平稳迁移"
+          technical: "设计服务边界与通信协议，完成 12 个微服务的拆分与灰度上线"
+      - text: "搭建基于 Prometheus + Grafana 的监控体系，告警响应时间从 30 分钟降至 5 分钟"
+        tags: [monitoring, devops]
+        impact: quantified
+      - text: "优化核心查询接口，P99 延迟从 800ms 降至 200ms"
+        tags: [performance, sql, backend]
+        impact: quantified
+      - text: "编写内部技术文档和 starter kit，新人首次代码提交时间从 2 周缩短到 3 天"
+        tags: [documentation, leadership, process]
+        impact: quantified
+        variants:
+          management: "建立新人培养体系和 onboarding 流程，团队上手周期缩短 50%"
+          technical: "编写 starter kit 和开发环境自动化脚本，降低新人环境搭建成本"
+      - text: "负责每周 code review，推动团队代码规范落地"
+        tags: [code-review, leadership]
+        impact: qualitative
+      - text: "参与年度技术规划，输出后端架构演进路线图"
+        tags: [system-design, planning]
+        impact: context-only
+
+  - company: "某互联网公司"
+    role: "初级开发工程师"
+    start: "2021-07"
+    end: "2023-05"
+    bullets:
+      - text: "开发用户增长活动后台，支撑 3 次百万级用户活动"
+        tags: [backend, growth, node.js]
+        impact: quantified
+      - text: "实现消息推送服务，日均推送量 200 万条，到达率 99.2%"
+        tags: [backend, messaging, reliability]
+        impact: quantified
+      - text: "编写自动化测试框架，单元测试覆盖率从 20% 提升到 75%"
+        tags: [testing, python, automation]
+        impact: quantified
+      - text: "配合产品经理完成 3 个版本的需求评审和排期"
+        tags: [communication, project-management]
+        impact: context-only
+
+projects:
+  - name: "内部运营效率平台"
+    context: "公司内部工具，服务 200+ 运营人员，替代多个 Excel 手工流程"
+    bullets:
+      - text: "从 0 到 1 搭建运营后台，替代 5 个 Excel 流程，人效提升约 40%"
+        tags: [react, node.js, product, full-stack]
+        impact: quantified
+      - text: "设计权限管理模块，支持 RBAC 和部门级数据隔离"
+        tags: [backend, security, system-design]
+        impact: qualitative
+
+  - name: "开源贡献 - 某 CLI 工具"
+    context: "个人开源项目，GitHub 300+ stars"
+    bullets:
+      - text: "独立开发命令行工具，简化 K8s 多集群配置切换"
+        tags: [kubernetes, go, open-source]
+        impact: quantified
+      - text: "编写完整文档和 CI 流水线，合并外部贡献者 PR 15 个"
+        tags: [ci/cd, documentation, open-source]
+        impact: quantified
+
+skills:
+  - name: "Python"
+    level: proficient
+    years: 4
+    evidence: ["自动化测试框架", "数据迁移脚本", "内部工具脚本"]
+  - name: "Go"
+    level: proficient
+    years: 3
+    evidence: ["开源 CLI 工具", "微服务核心模块"]
+  - name: "Java"
+    level: proficient
+    years: 3
+    evidence: ["订单系统", "消息推送服务"]
+  - name: "Kubernetes"
+    level: familiar
+    years: 1
+    evidence: ["微服务部署", "开源 CLI 工具"]
+  - name: "React"
+    level: familiar
+    years: 2
+    evidence: ["运营效率平台前端"]
+  - name: "SQL"
+    level: proficient
+    years: 4
+    evidence: ["分库分表方案", "查询优化"]
+
+education:
+  - school: "某大学"
+    degree: "本科"
+    major: "计算机科学与技术"
+    start: "2017-09"
+    end: "2021-06"
+
+certifications:
+  - name: "AWS Solutions Architect Associate"
+    year: "2024"
+
+achievements:
+  - text: "2024 年度最佳新人奖"
+    tags: [recognition]
+  - text: "内部黑客马拉松一等奖，项目后续被产品化"
+    tags: [recognition, innovation]

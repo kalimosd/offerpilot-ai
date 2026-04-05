@@ -19,9 +19,10 @@ Legacy `.doc` is not supported.
 
 Use inputs in this order:
 
-1. original source resume from the user
-2. original source job description
-3. previously generated drafts only as supporting reference
+1. profile datastore when provided (richest source for selection-based assembly)
+2. original source resume from the user
+3. original source job description
+4. previously generated drafts only as supporting reference
 
 ## Source Selection Rules
 
@@ -44,6 +45,7 @@ For job-targeted resumes and cover letters, capture:
 - job description text
 - target language
 - any user-specified emphasis
+- profile datastore path if available (see `DATASTORE.md`)
 
 ## Name Inputs
 

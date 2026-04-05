@@ -24,6 +24,7 @@ Additional inputs when needed:
 - job description for jd-fit diagnosis
 - job description for cover letters
 - user-provided preferred romanization of the candidate name
+- profile datastore (`profile_store.yaml`) for selection-based assembly (see `DATASTORE.md`)
 
 Input handling rules:
 
@@ -59,9 +60,18 @@ For resume optimization:
 
 For targeted resumes:
 
-- align with the job description
-- surface matching keywords naturally
-- prioritize the most relevant experience
+- if a profile datastore is provided, use the selection-based assembly path:
+  1. parse the JD to extract requirements and keywords
+  2. normalize keywords using `data/skill_aliases.zh-en.json`
+  3. match keywords against bullet tags in the datastore
+  4. rank matched bullets by relevance and impact level
+  5. select the best variant for each bullet when available
+  6. assemble selected bullets into resume sections
+  7. polish phrasing per `PROMPTS.md` rules
+- if no datastore is provided, fall back to direct rewrite:
+  - align with the job description
+  - surface matching keywords naturally
+  - prioritize the most relevant experience
 
 For cover letters:
 
@@ -106,6 +116,7 @@ Preferred order:
 
 - [ ] correct task type selected
 - [ ] original resume used when available
+- [ ] profile datastore used for selection when provided
 - [ ] job description included for `jd-fit diagnosis`
 - [ ] no fake achievements or fake metrics introduced
 - [ ] source contact details are preserved in the final deliverable unless anonymization was requested
