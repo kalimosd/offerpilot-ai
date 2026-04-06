@@ -16,7 +16,7 @@ The profile datastore is a structured personal material library. Instead of only
 ```yaml
 meta:           # candidate identity and contact info
 experience:     # work history with tagged bullets
-projects:       # standalone projects outside of work experience
+projects:       # standalone projects, grouped by category
 skills:         # skill inventory with proficiency and evidence
 education:      # degrees and schools
 certifications: # professional certifications
@@ -35,6 +35,16 @@ achievements:   # awards, recognitions, notable outcomes
 | phone      | no       | contact phone                            |
 | updated    | no       | last update date                         |
 
+### experience[]
+
+| Field   | Required | Description                                    |
+|---------|----------|------------------------------------------------|
+| company | yes      | company name                                   |
+| role    | yes      | job title                                      |
+| start   | yes      | start date in `YYYY-MM`                        |
+| end     | yes      | end date in `YYYY-MM` or `present`             |
+| bullets | yes      | list of bullet entries (see below)              |
+
 ### experience[].bullets[]
 
 | Field    | Required | Description                                              |
@@ -43,6 +53,78 @@ achievements:   # awards, recognitions, notable outcomes
 | tags     | yes      | list of skill/domain tags for JD matching                |
 | impact   | no       | `quantified` / `qualitative` / `context-only`            |
 | variants | no       | map of alternative phrasings keyed by perspective        |
+
+Bullets can be grouped with YAML comments (e.g. `# --- 基础体验 ---`) for readability. The agent ignores comments; ordering within a group is preserved during selection.
+
+### projects[]
+
+| Field    | Required | Description                                              |
+|----------|----------|----------------------------------------------------------|
+| name     | yes      | project name                                             |
+| context  | no       | one-line background                                      |
+| link     | no       | URL (e.g. GitHub repo)                                   |
+| category | no       | grouping label for resume section layout                 |
+| bullets  | yes      | list of bullet entries, same format as experience        |
+
+### category
+
+Use `category` to group projects under a shared resume section. Projects with the same `category` value are rendered together.
+
+Example:
+
+```yaml
+projects:
+  - name: "OfferPilot"
+    category: "ai-engineering"
+    bullets: [...]
+
+  - name: "Jira-Power"
+    category: "ai-engineering"
+    bullets: [...]
+
+  - name: "AOD 预测模型"
+    bullets: [...]
+```
+
+When generating a resume, the agent groups `ai-engineering` projects under a single heading (e.g. "AI 工程化实践") and renders uncategorized projects under a default heading (e.g. "项目经历").
+
+### link
+
+Use `link` to attach a URL to a project. The agent includes it in the resume output next to the project name.
+
+```yaml
+  - name: "OfferPilot"
+    link: "https://github.com/user/offerpilot-ai"
+```
+
+### ref (cross-reference)
+
+Use `ref` on a bullet to indicate it is a brief mention of something described in detail elsewhere (typically a project). The value should match a project's `name`.
+
+```yaml
+experience:
+  - company: "某公司"
+    bullets:
+      - text: "搭建基于 AI agent 的 bug 自动分析工作流，实现日志自动下载、分类与结果回传"
+        tags: [ai, agent, automation]
+        impact: qualitative
+        ref: "Jira-Power — Bug 智能分析工作流"
+
+projects:
+  - name: "Jira-Power — Bug 智能分析工作流"
+    category: "ai-engineering"
+    bullets:
+      - text: "配置 Jira + Playwright MCP，根据 bug 标题自动分类..."
+        ...
+```
+
+Agent rules for `ref`:
+
+- In work experience: use the short bullet text as-is, do not expand
+- In the project section: use the full bullets from the referenced project
+- Never duplicate the same level of detail in both places
+- If the target JD only needs a brief mention, the project section entry can be omitted
+- If the target JD values the project highly, include both the brief mention and the detailed project section
 
 ### variants
 
