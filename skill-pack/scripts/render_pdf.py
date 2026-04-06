@@ -64,7 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--style",
-        choices=["classic", "ats", "compact", "wondercv"],
+        choices=["classic", "ats", "compact", "standard_cn"],
         default="classic",
         help="PDF style to use. Default: classic.",
     )
@@ -430,26 +430,26 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
         font-family: {MONOSPACE_FONT_STACK};
       }}
 
-      .style-wondercv h1.name {{
+      .style-standard_cn h1.name {{
         text-align: center;
       }}
 
-      .style-wondercv p.meta {{
+      .style-standard_cn p.meta {{
         text-align: center;
       }}
 
-      .style-wondercv h2.section-heading {{
+      .style-standard_cn h2.section-heading {{
         border-bottom: 1.2pt solid #333333;
         padding-bottom: 2pt;
       }}
 
-      .style-wondercv p.emphasis {{
+      .style-standard_cn p.emphasis {{
         color: #222222;
         border-bottom: 0.6pt dashed #cccccc;
         padding-bottom: 1.5pt;
       }}
 
-      .style-wondercv .bullet-list li {{
+      .style-standard_cn .bullet-list li {{
         color: #333333;
       }}
 
@@ -463,7 +463,7 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
         page-break-after: avoid;
       }}
 
-      .style-wondercv h3.sub-heading {{
+      .style-standard_cn h3.sub-heading {{
         border-bottom: 0.6pt dashed #cccccc;
         padding-bottom: 1.5pt;
       }}
@@ -780,7 +780,7 @@ def _get_style_config(style: str, document_type: str) -> dict:
                 "section_break_spacer": 0.045,
             }
         )
-    elif style == "wondercv":
+    elif style == "standard_cn":
         base.update(
             {
                 "header_alignment": 1,  # centered

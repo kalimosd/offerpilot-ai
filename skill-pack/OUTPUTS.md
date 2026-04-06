@@ -50,7 +50,7 @@ The `render_pdf.py` script supports multiple styles via `--style`:
 - `classic` — default, left-aligned, clean layout
 - `ats` — optimized for ATS parsing, slightly smaller text
 - `compact` — tighter margins and spacing for dense content
-- `wondercv` — centered name and contact info, section headings with solid underline, sub-headings with light dashed underline, dates right-aligned
+- `standard_cn` — centered name and contact info, section headings with solid underline, sub-headings with light dashed underline, dates right-aligned
 
 ## PDF Formatting Rules
 
