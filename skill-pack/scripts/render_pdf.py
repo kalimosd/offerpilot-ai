@@ -68,6 +68,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="classic",
         help="PDF style to use. Default: classic.",
     )
+    parser.add_argument(
+        "--photo",
+        default=None,
+        help="Path to a photo to embed in the header (right-aligned).",
+    )
     return parser
 
 
@@ -76,6 +81,7 @@ def render_markdown_to_pdf(
     output_path: str,
     document_type: str = "resume",
     style: str = "classic",
+    photo_path: str | None = None,
 ) -> Path:
     """Render markdown-like resume text to a PDF file."""
     target_path = Path(output_path)
@@ -88,6 +94,7 @@ def render_markdown_to_pdf(
         style_config=style_config,
         document_type=document_type,
         style=style,
+        photo_path=photo_path,
     )
 
     try:
@@ -161,10 +168,22 @@ def _render_blocks_to_html(
     style_config: dict,
     document_type: str,
     style: str,
+    photo_path: str | None = None,
 ) -> str:
     body_parts: list[str] = []
     list_is_open = False
     project_group_open = False
+
+    # Encode photo as base64 data URI if provided
+    photo_data_uri = None
+    if photo_path:
+        import base64
+        photo_file = Path(photo_path)
+        if photo_file.exists():
+            suffix = photo_file.suffix.lower().lstrip(".")
+            mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png"}.get(suffix, "jpeg")
+            b64 = base64.b64encode(photo_file.read_bytes()).decode()
+            photo_data_uri = f"data:image/{mime};base64,{b64}"
 
     for i, block in enumerate(blocks):
         if block.kind != "bullet" and list_is_open:
@@ -197,6 +216,9 @@ def _render_blocks_to_html(
         if block.kind == "heading":
             if block.level == 1:
                 tag_name, css_class = "h1", "name"
+                if photo_data_uri:
+                    body_parts.append('<div class="header-with-photo">')
+                    body_parts.append('<div class="header-text">')
             elif block.level == 2:
                 tag_name, css_class = "h2", "section-heading"
             else:
@@ -214,15 +236,22 @@ def _render_blocks_to_html(
                 )
             continue
 
+        if block.kind == "meta":
+            body_parts.append(f'<p class="meta">{_render_inline_html(block.text)}</p>')
+            if photo_data_uri:
+                # Close header-text, add photo, close header-with-photo
+                body_parts.append('</div>')  # close header-text
+                body_parts.append(
+                    f'<img class="header-photo" src="{photo_data_uri}" alt="photo" />'
+                )
+                body_parts.append('</div>')  # close header-with-photo
+            continue
+
         if block.kind == "bullet":
             if not list_is_open:
                 body_parts.append('<ul class="bullet-list">')
                 list_is_open = True
             body_parts.append(f"<li>{_render_inline_html(block.text)}</li>")
-            continue
-
-        if block.kind == "meta":
-            body_parts.append(f'<p class="meta">{_render_inline_html(block.text)}</p>')
             continue
 
         if block.kind == "emphasis":
@@ -436,6 +465,30 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
 
       .style-standard_cn p.meta {{
         text-align: center;
+      }}
+
+      /* Photo header layout */
+      .header-with-photo {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20pt;
+        margin-bottom: 4pt;
+      }}
+      .header-with-photo .header-text {{
+        flex: 1;
+        text-align: center;
+      }}
+      .header-with-photo h1.name,
+      .header-with-photo p.meta {{
+        text-align: center;
+        margin: 0;
+      }}
+      .header-photo {{
+        width: 72pt;
+        height: 96pt;
+        object-fit: cover;
+        flex-shrink: 0;
       }}
 
       .style-standard_cn h2.section-heading {{
@@ -833,6 +886,7 @@ def main() -> int:
         args.output,
         document_type=args.document_type,
         style=args.style,
+        photo_path=args.photo,
     )
     print(f"OK: rendered PDF to {args.output}")
     return 0
