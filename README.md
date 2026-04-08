@@ -52,7 +52,8 @@ Their resumes are often too generic, their cover letters feel interchangeable, a
 - **Cover letter generation**: Produces concise, tailored letters grounded in real experience.
 - **Profile datastore support**: Pulls the most relevant experience from a structured data source.
 - **JD fit analysis**: Identifies match signals, gaps, and rewrite priorities.
-- **Local workflow tooling**: Supports text extraction, validation, and PDF export.
+- **Job discovery**: Scans career portals and search engines to find relevant openings automatically.
+- **Local workflow tooling**: Supports text extraction, validation, PDF export with photo embedding, and portal scanning.
 
 ## Tech Stack
 
@@ -60,7 +61,7 @@ Their resumes are often too generic, their cover letters feel interchangeable, a
 - LLM-powered rewriting and analysis
 - Modular skill-pack architecture
 - YAML-based profile datastore
-- Playwright-based PDF export
+- Playwright-based PDF export and portal scanning
 
 ## Project Structure
 
@@ -71,6 +72,7 @@ Their resumes are often too generic, their cover letters feel interchangeable, a
 .
 ├── README.md
 ├── profile_store.yaml
+├── portals_cn.yml
 ├── skill-pack/
 │   ├── README.md
 │   ├── WORKFLOW.md
@@ -93,8 +95,11 @@ Their resumes are often too generic, their cover letters feel interchangeable, a
 │   └── scripts/
 │       ├── extract_text.py
 │       ├── render_pdf.py
+│       ├── scan_portals.py
 │       ├── validate_inputs.py
 │       └── validate_outputs.py
+├── jds/                  # (gitignored) saved JDs from scans
+├── data/                 # (gitignored) scan history and pipeline
 └── tests/
     └── test_export.py
 ```
@@ -112,6 +117,33 @@ Export a reviewed draft to PDF:
 ```bash
 python3 skill-pack/scripts/render_pdf.py "resume.md" "resume.pdf" --document-type resume --style classic
 ```
+
+Export with a photo embedded in the header:
+
+```bash
+python3 skill-pack/scripts/render_pdf.py "resume.md" "resume.pdf" --style standard_cn --photo "photo.jpg"
+```
+
+Scan career portals for matching job listings:
+
+```bash
+# Full scan (CN APIs + Greenhouse + web search)
+python3 skill-pack/scripts/scan_portals.py
+
+# Only Chinese company APIs (Meituan, Kuaishou, Didi)
+python3 skill-pack/scripts/scan_portals.py --cn-only
+
+# Only Greenhouse API (international companies)
+python3 skill-pack/scripts/scan_portals.py --greenhouse-only
+
+# Only web search (DuckDuckGo, covers 20+ companies)
+python3 skill-pack/scripts/scan_portals.py --search-only
+
+# Preview without writing files
+python3 skill-pack/scripts/scan_portals.py --dry-run
+```
+
+Matched jobs are saved to `jds/` with full JD content and application links. Scan history is tracked in `data/scan-history.tsv` for deduplication.
 
 ## Roadmap
 
