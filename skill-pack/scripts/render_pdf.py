@@ -173,6 +173,7 @@ def _render_blocks_to_html(
     body_parts: list[str] = []
     list_is_open = False
     project_group_open = False
+    section_group_open = False
 
     # Encode photo as base64 data URI if provided
     photo_data_uri = None
@@ -221,6 +222,11 @@ def _render_blocks_to_html(
                     body_parts.append('<div class="header-text">')
             elif block.level == 2:
                 tag_name, css_class = "h2", "section-heading"
+                # Close previous section group, open new one
+                if section_group_open:
+                    body_parts.append("</div>")
+                body_parts.append('<div class="section-group">')
+                section_group_open = True
             else:
                 tag_name, css_class = "h3", "sub-heading"
             main_text, date_text = _split_date_tail(block.text)
@@ -281,6 +287,8 @@ def _render_blocks_to_html(
         body_parts.append("</ul>")
     if project_group_open:
         body_parts.append("</div>")
+    if section_group_open:
+        body_parts.append("</div>")
 
     css = _build_pdf_css(style_config, document_type=document_type, style=style)
     body_html = "\n".join(body_parts)
@@ -324,7 +332,7 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
     return f"""
       @page {{
         size: A4;
-        margin: 0;
+        margin: {tokens["margin_top"]} {tokens["margin_x"]} {tokens["margin_bottom"]};
       }}
 
       * {{
@@ -349,8 +357,6 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
 
       .document {{
         width: 210mm;
-        min-height: 297mm;
-        padding: {tokens["margin_top"]} {tokens["margin_x"]} {tokens["margin_bottom"]};
         font-family: {DEFAULT_FONT_STACK};
       }}
 
@@ -402,6 +408,10 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
       }}
 
       .document .project-group {{
+        break-inside: avoid;
+      }}
+
+      .document .section-group {{
         break-inside: avoid;
       }}
 
@@ -840,27 +850,27 @@ def _get_style_config(style: str, document_type: str) -> dict:
             {
                 "header_alignment": 1,  # centered
                 "margin_x": 0.7,
-                "margin_top": 0.5,
-                "margin_bottom": 0.5,
+                "margin_top": 0.45,
+                "margin_bottom": 0.45,
                 "name_font_size": 20,
-                "name_leading": 24,
+                "name_leading": 23,
                 "name_space_after": 2,
                 "meta_font_size": 9.5,
-                "meta_leading": 13,
-                "meta_space_after": 6,
+                "meta_leading": 12.5,
+                "meta_space_after": 5,
                 "section_font_size": 11.5,
-                "section_leading": 15,
-                "section_space_before": 7,
-                "section_space_after": 3,
+                "section_leading": 14,
+                "section_space_before": 12,
+                "section_space_after": 5,
                 "emphasis_font_size": 10,
                 "emphasis_leading": 13,
                 "emphasis_space_after": 1.5,
                 "body_font_size": 9.5,
-                "body_leading": 12.5,
-                "bullet_space_after": 1,
-                "paragraph_space_after": 2,
-                "blank_spacer": 0.02,
-                "section_break_spacer": 0.02,
+                "body_leading": 13,
+                "bullet_space_after": 1.5,
+                "paragraph_space_after": 2.5,
+                "blank_spacer": 0.03,
+                "section_break_spacer": 0.03,
             }
         )
 
