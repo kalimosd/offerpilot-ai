@@ -2,15 +2,6 @@
 
 # OfferPilot AI
 
-[![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
-[![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)](https://playwright.dev)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-
-[![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)](https://claude.ai)
-[![Cursor](https://img.shields.io/badge/Cursor-000?style=flat&logo=cursor&logoColor=white)](https://cursor.com)
-[![Codex](https://img.shields.io/badge/Codex-412991?style=flat&logo=openai&logoColor=white)](https://openai.com)
-[![Kiro](https://img.shields.io/badge/Kiro-FF9900?style=flat&logo=amazon&logoColor=white)](https://kiro.dev)
-
 **AI 求职助手，把弱申请变成面试敲门砖。**
 
 简历写得像岗位描述的复制粘贴？<br>
@@ -26,7 +17,7 @@
 
 [功能](#功能) · [快速开始](#快速开始) · [效果示例](#效果示例) · [进阶用法](#进阶用法) · [路线图](#路线图) · [参与贡献](#参与贡献)
 
-[English](./README_en.md)
+[English](./README.md)
 
 </div>
 
@@ -50,15 +41,12 @@ OfferPilot 只关注结果：更清晰的定位、更强的材料、更高的面
 | **职位发现** | 自动扫描招聘网站和搜索引擎，发现匹配岗位 |
 | **PDF 导出** | 将 Markdown 草稿渲染为带样式的 PDF，支持嵌入照片 |
 
-## 快速开始（Skills 优先）
+## 快速开始
 
 1. 准备 `resume.md`（或 `resume.pdf`）
 2. 准备 `job.md`（目标岗位的 JD）
-3. 打开 `skill-pack/README.md` 并按 read order 执行
-4. 在 agent 里使用短触发语，例如：
-   - `按照 offerpilot 优化简历`
-   - `用 offerpilot 做 JD 匹配`
-   - `/offerpilot 根据我简历推荐10个岗位`
+3. 打开 `skill-pack/README.md`
+4. 通过 Cursor、Claude Code 或 Codex 类 agent 运行工作流
 5. 审阅生成的 Markdown 输出，满意后导出
 
 
@@ -92,8 +80,8 @@ OfferPilot 只关注结果：更清晰的定位、更强的材料、更高的面
 
 ```text
 .
-├── README.md               # 中文（主页）
-├── README_en.md            # English
+├── README.md               # English
+├── README_zh.md            # 中文
 ├── profile_store.yaml      # 个人素材库（不入 git）
 ├── portals_cn.yml
 ├── skill-pack/
@@ -111,31 +99,7 @@ OfferPilot 只关注结果：更清晰的定位、更强的材料、更高的面
 └── tests/
 ```
 
-## 可选辅助命令（CLI）
-
-`skill-pack` 是主入口，CLI 只是可选执行器：
-
-```bash
-# 查看全部命令
-offerpilot
-
-# 提取源文件文本
-offerpilot extract "resume.pdf" --output "resume.txt"
-
-# 导出 PDF
-offerpilot pdf "resume.md" "resume.pdf" --style classic
-
-# 扫描岗位
-offerpilot scan --cn-only
-
-# 最小流程：校验输入 + 导出简历 PDF
-offerpilot run "resume.md" "outputs/resume.pdf" --style ats
-
-# 端到端岗位流水线：扫描 + 排序 + TopN 推荐
-offerpilot pipeline --days 7 --top-n 10 --cn-focus
-```
-
-直接脚本调用（同样是可选项）：
+## 进阶用法
 
 从 PDF 或 DOCX 提取文本：
 
@@ -195,16 +159,16 @@ python3 skill-pack/scripts/scan_portals.py --dry-run
 
 <div align="center">
 
-Work matters. After school ends, it quietly takes over most of your waking hours — that's just how it is.
+工作很重要。离开学校以后，它不声不响地占据了你醒着的大部分时间，这没什么好争的。
 
-But work isn't everything. You weren't put on this earth to optimize bullet points.
+但工作又没那么重要。人不是为了优化 bullet point 而来到这个世界上的。
 
-You did real things. You solved real problems. You stayed late, shipped on time, cleaned up someone else's mess, and nobody wrote it down properly — least of all you.
+你做过真实的事。你解决过真实的问题。你加过班、赶过 deadline、替别人擦过屁股，但没人好好写下来 — 你自己也没有。
 
-This project won't change your life. But if it helps one person stop underselling themselves, stop copy-pasting the same generic resume into the void, and actually land an interview they deserve —
+这个项目改变不了你的人生。但如果它能帮一个人不再低估自己，不再把同一份万能简历投进黑洞，真正拿到一个配得上的面试机会 —
 
-that's enough.
+那就够了。
 
-Go get the offer. Then close the laptop and live.
+去拿 offer 吧。然后合上电脑，好好生活。
 
 </div>
