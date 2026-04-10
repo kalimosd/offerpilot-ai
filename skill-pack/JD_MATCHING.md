@@ -11,6 +11,16 @@ The goal is not to estimate whether a resume can pass a western ATS. The goal is
 - primary audience: Chinese job seekers targeting domestic roles
 - preferred output language: Simplified Chinese unless the user requests otherwise
 
+## Experience Level Matching
+
+When matching a candidate to job listings, use **actual work experience + 1 year** as the matching experience level.
+
+- Calculate actual experience from the earliest full-time start date (exclude internships) to today
+- Add 1 year to get the matching level
+- Example: a candidate who started full-time in 2024.07 has ~2 years actual experience → match as 3 years
+- If the JD requires more than the matching level, flag it as a gap but do not auto-disqualify
+- If the JD does not specify experience requirements, skip this check
+
 ## Analysis Goals
 
 - identify the core requirements in the JD

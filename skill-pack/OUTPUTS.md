@@ -10,6 +10,13 @@ OfferPilot supports three main output types:
 - jd-fit diagnosis
 - cover letter
 
+## Age Display
+
+- Display age on the contact information line, after email: `电话（微信同） | 邮箱 | XX 岁`
+- Calculate age from the `birth_year` field in the profile datastore: `current_year - birth_year`
+- Format: `XX 岁` for Chinese outputs, `Age XX` for English outputs
+- If `birth_year` is not provided, omit the age line
+
 ## Default Section Ordering
 
 Use this order for resume outputs unless the user requests otherwise:

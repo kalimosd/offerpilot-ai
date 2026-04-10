@@ -1,0 +1,232 @@
+# 岗位扫描配置（中国市场）
+# 用法: python3 skill-pack/scripts/scan_portals.py
+
+# 标题过滤规则
+title_filter:
+  positive:
+    # Android / 客户端
+    - "Android"
+    - "安卓"
+    - "Launcher"
+    - "Framework"
+    - "客户端"
+    - "终端开发"
+    - "Flutter"
+    - "Rust"
+    - "跨端"
+    - "跨平台"
+    - "性能优化"
+    - "基础体验"
+    - "稳定性"
+    # AI
+    - "AI"
+    - "大模型"
+    - "LLM"
+    - "Agent"
+    - "算法"
+    - "机器学习"
+    - "深度学习"
+    - "NLP"
+    - "数据挖掘"
+    # AI + 工程结合
+    - "AI工程"
+    - "AI应用"
+    - "AI Native"
+    - "端侧"
+    - "on-device"
+    - "MLOps"
+    # 通用开发
+    - "软件开发"
+    - "后端"
+    - "全栈"
+  negative:
+    - "实习"
+    - "Intern"
+    - "iOS"
+    - "前端"
+    - "PHP"
+    - "测试"
+    - "运维"
+    - "硬件"
+    - "FPGA"
+    - "嵌入式"
+    - "10年以上"
+    - "8年以上"
+    - "七年"
+    - "十年"
+  seniority_boost:
+    - "高级"
+    - "资深"
+    - "专家"
+    - "Senior"
+    - "Staff"
+    - "Lead"
+    - "主管"
+
+# Greenhouse API 公司（外企，结构化数据，最可靠）
+greenhouse_companies:
+  - name: Anthropic
+    slug: anthropic
+    enabled: true
+  - name: Vercel
+    slug: vercel
+    enabled: true
+  - name: DeepMind
+    slug: deepmind
+    enabled: true
+  - name: Glean
+    slug: gleanwork
+    enabled: true
+  - name: Airtable
+    slug: airtable
+    enabled: true
+  - name: Intercom
+    slug: intercom
+    enabled: true
+  - name: Stability AI
+    slug: stabilityai
+    enabled: true
+  - name: Arize AI
+    slug: arizeai
+    enabled: true
+
+# 国内大厂 API（直接调内部接口，无需 Playwright）
+cn_api_companies:
+  - name: 美团
+    type: meituan
+    api_url: https://zhaopin.meituan.com/api/official/job/getJobList
+    keywords: "AI"
+    enabled: true
+  - name: 快手
+    type: kuaishou
+    api_url: https://zhaopin.kuaishou.cn/recruit/e/api/v1/open/positions/simple
+    keywords: ""
+    enabled: true
+  - name: 滴滴
+    type: didi
+    api_url: https://talent.didiglobal.com/recruit-portal-service/api/job/front/list
+    keywords: ""
+    enabled: true
+
+# Playwright 爬取公司（SPA 页面，API 不可用时的备选）
+playwright_companies:
+  - name: 字节跳动
+    careers_url: https://jobs.bytedance.com/experienced/position
+    enabled: false
+    notes: "需要登录"
+  - name: 腾讯
+    careers_url: https://careers.tencent.com/
+    enabled: false
+    notes: "无公开 API"
+  - name: 阿里巴巴
+    careers_url: https://talent.alibaba.com/
+    enabled: false
+    notes: "无公开 API"
+  - name: 百度
+    careers_url: https://talent.baidu.com/
+    enabled: false
+    notes: "无公开 API"
+
+# 搜索引擎查询（第三层：广撒网发现岗位）
+# 通过 Google/Bing site: 搜索发现各公司招聘页上的岗位
+search_queries:
+  # 国内互联网大厂
+  - name: 字节跳动 — AI
+    query: '字节跳动 AI 算法 社招 jobs.bytedance.com'
+    enabled: true
+  - name: 腾讯 — AI
+    query: '腾讯 AI 算法 社招 careers.tencent.com'
+    enabled: true
+  - name: 阿里巴巴 — AI
+    query: '阿里巴巴 AI 算法 社招 talent.alibaba.com'
+    enabled: true
+  - name: 百度 — AI
+    query: '百度 AI 大模型 社招 talent.baidu.com'
+    enabled: true
+  - name: B站 — AI
+    query: 'bilibili AI 算法 社招 jobs.bilibili.com'
+    enabled: true
+  - name: 拼多多 — AI
+    query: '拼多多 AI 算法 社招 careers.pinduoduo.com'
+    enabled: true
+
+  # 中型互联网
+  - name: 小红书 — AI
+    query: '小红书 AI 算法 社招 job.xiaohongshu.com'
+    enabled: true
+  - name: 携程 — AI
+    query: '携程 AI 算法 社招 careers.trip.com'
+    enabled: true
+  - name: 米哈游 — AI
+    query: '米哈游 AI 算法 社招 join.mihoyo.com'
+    enabled: true
+  - name: 得物 — AI
+    query: '得物 AI 算法 社招 招聘'
+    enabled: true
+  - name: SHEIN — AI
+    query: 'SHEIN AI algorithm engineer careers.shein.com'
+    enabled: true
+  - name: 蚂蚁集团 — AI
+    query: '蚂蚁集团 AI 大模型 社招 talent.antgroup.com'
+    enabled: true
+  - name: 网易 — AI
+    query: '网易 AI 算法 社招 hr.163.com'
+    enabled: true
+  - name: 京东 — AI
+    query: '京东 AI 算法 社招 zhaopin.jd.com'
+    enabled: true
+
+  # 新兴 AI 公司
+  - name: 月之暗面 — 全部
+    query: '月之暗面 Moonshot AI 招聘 社招'
+    enabled: true
+  - name: 智谱AI — 全部
+    query: '智谱AI zhipuai 招聘 社招'
+    enabled: true
+  - name: MiniMax — 全部
+    query: 'MiniMax AI 招聘 社招'
+    enabled: true
+  - name: 百川智能 — 全部
+    query: '百川智能 Baichuan 招聘 社招'
+    enabled: true
+  - name: 零一万物 — 全部
+    query: '零一万物 01.AI 招聘 社招'
+    enabled: true
+  - name: 阶跃星辰 — 全部
+    query: '阶跃星辰 StepFun 招聘 社招'
+    enabled: true
+  - name: 深度求索 — 全部
+    query: 'DeepSeek 深度求索 招聘 社招'
+    enabled: true
+
+  # 客户端 + AI 结合方向
+  - name: Flutter 社招
+    query: 'Flutter 工程师 社招 招聘 2026'
+    enabled: true
+  - name: Rust 社招
+    query: 'Rust 工程师 社招 招聘 互联网 2026'
+    enabled: true
+  - name: 客户端性能优化
+    query: '客户端 性能优化 工程师 社招 招聘'
+    enabled: true
+  - name: 端侧AI
+    query: '端侧AI OR on-device AI 工程师 社招 招聘'
+    enabled: true
+  - name: AI工程师 社招
+    query: 'AI工程师 OR AI应用工程师 社招 招聘 上海 OR 杭州 OR 深圳'
+    enabled: true
+
+# 地区过滤（可选，留空则不过滤）
+location_filter:
+  - "南京"
+  - "Nanjing"
+  - "上海"
+  - "Shanghai"
+  - "杭州"
+  - "Hangzhou"
+  - "深圳"
+  - "Shenzhen"
+  - "广州"
+  - "Guangzhou"
+  - "Remote"
+  - "远程"

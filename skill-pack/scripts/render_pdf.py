@@ -68,6 +68,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="classic",
         help="PDF style to use. Default: classic.",
     )
+    parser.add_argument(
+        "--photo",
+        default=None,
+        help="Path to a photo to embed in the header (right-aligned).",
+    )
     return parser
 
 
@@ -76,6 +81,7 @@ def render_markdown_to_pdf(
     output_path: str,
     document_type: str = "resume",
     style: str = "classic",
+    photo_path: str | None = None,
 ) -> Path:
     """Render markdown-like resume text to a PDF file."""
     target_path = Path(output_path)
@@ -88,6 +94,7 @@ def render_markdown_to_pdf(
         style_config=style_config,
         document_type=document_type,
         style=style,
+        photo_path=photo_path,
     )
 
     try:
@@ -161,10 +168,23 @@ def _render_blocks_to_html(
     style_config: dict,
     document_type: str,
     style: str,
+    photo_path: str | None = None,
 ) -> str:
     body_parts: list[str] = []
     list_is_open = False
     project_group_open = False
+    section_group_open = False
+
+    # Encode photo as base64 data URI if provided
+    photo_data_uri = None
+    if photo_path:
+        import base64
+        photo_file = Path(photo_path)
+        if photo_file.exists():
+            suffix = photo_file.suffix.lower().lstrip(".")
+            mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png"}.get(suffix, "jpeg")
+            b64 = base64.b64encode(photo_file.read_bytes()).decode()
+            photo_data_uri = f"data:image/{mime};base64,{b64}"
 
     for i, block in enumerate(blocks):
         if block.kind != "bullet" and list_is_open:
@@ -197,8 +217,16 @@ def _render_blocks_to_html(
         if block.kind == "heading":
             if block.level == 1:
                 tag_name, css_class = "h1", "name"
+                if photo_data_uri:
+                    body_parts.append('<div class="header-with-photo">')
+                    body_parts.append('<div class="header-text">')
             elif block.level == 2:
                 tag_name, css_class = "h2", "section-heading"
+                # Close previous section group, open new one
+                if section_group_open:
+                    body_parts.append("</div>")
+                body_parts.append('<div class="section-group">')
+                section_group_open = True
             else:
                 tag_name, css_class = "h3", "sub-heading"
             main_text, date_text = _split_date_tail(block.text)
@@ -214,15 +242,22 @@ def _render_blocks_to_html(
                 )
             continue
 
+        if block.kind == "meta":
+            body_parts.append(f'<p class="meta">{_render_inline_html(block.text)}</p>')
+            if photo_data_uri:
+                # Close header-text, add photo, close header-with-photo
+                body_parts.append('</div>')  # close header-text
+                body_parts.append(
+                    f'<img class="header-photo" src="{photo_data_uri}" alt="photo" />'
+                )
+                body_parts.append('</div>')  # close header-with-photo
+            continue
+
         if block.kind == "bullet":
             if not list_is_open:
                 body_parts.append('<ul class="bullet-list">')
                 list_is_open = True
             body_parts.append(f"<li>{_render_inline_html(block.text)}</li>")
-            continue
-
-        if block.kind == "meta":
-            body_parts.append(f'<p class="meta">{_render_inline_html(block.text)}</p>')
             continue
 
         if block.kind == "emphasis":
@@ -251,6 +286,8 @@ def _render_blocks_to_html(
     if list_is_open:
         body_parts.append("</ul>")
     if project_group_open:
+        body_parts.append("</div>")
+    if section_group_open:
         body_parts.append("</div>")
 
     css = _build_pdf_css(style_config, document_type=document_type, style=style)
@@ -295,7 +332,7 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
     return f"""
       @page {{
         size: A4;
-        margin: 0;
+        margin: {tokens["margin_top"]} {tokens["margin_x"]} {tokens["margin_bottom"]};
       }}
 
       * {{
@@ -320,8 +357,6 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
 
       .document {{
         width: 210mm;
-        min-height: 297mm;
-        padding: {tokens["margin_top"]} {tokens["margin_x"]} {tokens["margin_bottom"]};
         font-family: {DEFAULT_FONT_STACK};
       }}
 
@@ -376,6 +411,10 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
         break-inside: avoid;
       }}
 
+      .document .section-group {{
+        break-inside: avoid;
+      }}
+
       .document .link-line {{
         font-size: 0.75em;
         color: #6b7280;
@@ -384,8 +423,9 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
       }}
 
       .document .link-line a {{
-        color: #6b7280;
+        color: #4b6b8a;
         text-decoration: none;
+        font-weight: bold;
       }}
 
       .document p.body {{
@@ -438,8 +478,33 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
         text-align: center;
       }}
 
+      /* Photo header layout */
+      .header-with-photo {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20pt;
+        margin-bottom: 4pt;
+      }}
+      .header-with-photo .header-text {{
+        flex: 1;
+        text-align: center;
+      }}
+      .header-with-photo h1.name,
+      .header-with-photo p.meta {{
+        text-align: center;
+        margin: 0;
+      }}
+      .header-photo {{
+        width: 72pt;
+        height: 96pt;
+        object-fit: cover;
+        flex-shrink: 0;
+      }}
+
       .style-standard_cn h2.section-heading {{
-        border-bottom: 1.2pt solid #333333;
+        color: #1a4480;
+        border-bottom: 1.2pt solid #1a4480;
         padding-bottom: 2pt;
       }}
 
@@ -785,27 +850,27 @@ def _get_style_config(style: str, document_type: str) -> dict:
             {
                 "header_alignment": 1,  # centered
                 "margin_x": 0.7,
-                "margin_top": 0.5,
-                "margin_bottom": 0.5,
+                "margin_top": 0.45,
+                "margin_bottom": 0.45,
                 "name_font_size": 20,
-                "name_leading": 24,
+                "name_leading": 23,
                 "name_space_after": 2,
                 "meta_font_size": 9.5,
-                "meta_leading": 13,
-                "meta_space_after": 6,
+                "meta_leading": 12.5,
+                "meta_space_after": 5,
                 "section_font_size": 11.5,
-                "section_leading": 15,
-                "section_space_before": 7,
-                "section_space_after": 3,
+                "section_leading": 14,
+                "section_space_before": 12,
+                "section_space_after": 5,
                 "emphasis_font_size": 10,
                 "emphasis_leading": 13,
                 "emphasis_space_after": 1.5,
                 "body_font_size": 9.5,
-                "body_leading": 12.5,
-                "bullet_space_after": 1,
-                "paragraph_space_after": 2,
-                "blank_spacer": 0.02,
-                "section_break_spacer": 0.02,
+                "body_leading": 13,
+                "bullet_space_after": 1.5,
+                "paragraph_space_after": 2.5,
+                "blank_spacer": 0.03,
+                "section_break_spacer": 0.03,
             }
         )
 
@@ -833,6 +898,7 @@ def main() -> int:
         args.output,
         document_type=args.document_type,
         style=args.style,
+        photo_path=args.photo,
     )
     print(f"OK: rendered PDF to {args.output}")
     return 0

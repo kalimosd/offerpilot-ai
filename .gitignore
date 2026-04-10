@@ -8,3 +8,5 @@ offerpilot.egg-info/
 .cursor/
 .kiro/
 outputs/
+jds/
+data/
