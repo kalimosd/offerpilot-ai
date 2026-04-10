@@ -41,12 +41,15 @@ OfferPilot 只关注结果：更清晰的定位、更强的材料、更高的面
 | **职位发现** | 自动扫描招聘网站和搜索引擎，发现匹配岗位 |
 | **PDF 导出** | 将 Markdown 草稿渲染为带样式的 PDF，支持嵌入照片 |
 
-## 快速开始
+## 快速开始（Skills 优先）
 
 1. 准备 `resume.md`（或 `resume.pdf`）
 2. 准备 `job.md`（目标岗位的 JD）
-3. 打开 `skill-pack/README.md`
-4. 通过 Cursor、Claude Code 或 Codex 类 agent 运行工作流
+3. 打开 `skill-pack/README.md` 并按 read order 执行
+4. 在 agent 里使用短触发语，例如：
+   - `按照 offerpilot 优化简历`
+   - `用 offerpilot 做 JD 匹配`
+   - `/offerpilot 根据我简历推荐10个岗位`
 5. 审阅生成的 Markdown 输出，满意后导出
 
 
@@ -99,9 +102,9 @@ OfferPilot 只关注结果：更清晰的定位、更强的材料、更高的面
 └── tests/
 ```
 
-## 进阶用法
+## 可选辅助命令（CLI）
 
-可选命令入口（`skill-pack` 仍是主入口）：
+`skill-pack` 是主入口，CLI 只是可选执行器：
 
 ```bash
 # 查看全部命令
@@ -118,9 +121,12 @@ offerpilot scan --cn-only
 
 # 最小流程：校验输入 + 导出简历 PDF
 offerpilot run "resume.md" "outputs/resume.pdf" --style ats
+
+# 端到端岗位流水线：扫描 + 排序 + TopN 推荐
+offerpilot pipeline --days 7 --top-n 10 --cn-focus
 ```
 
-直接脚本调用：
+直接脚本调用（同样是可选项）：
 
 从 PDF 或 DOCX 提取文本：
 

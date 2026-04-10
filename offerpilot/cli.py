@@ -88,6 +88,21 @@ def _build_parser() -> argparse.ArgumentParser:
         help="PDF style.",
     )
 
+    pipeline = subparsers.add_parser(
+        "pipeline",
+        help="Run end-to-end job pipeline: scan, rank, and recommend.",
+    )
+    pipeline.add_argument("--config", default="portals_cn.yml", help="Portal config YAML.")
+    pipeline.add_argument("--no-scan", action="store_true", help="Skip scan and rank from history.")
+    pipeline.add_argument("--days", type=int, default=7, help="Use jobs from the last N days.")
+    pipeline.add_argument("--top-n", type=int, default=10, help="Number of recommendations.")
+    pipeline.add_argument(
+        "--output",
+        default="outputs/pipeline_recommendations.md",
+        help="Recommendation markdown output path.",
+    )
+    pipeline.add_argument("--cn-focus", action="store_true", help="Boost China-focused roles.")
+
     return parser
 
 
@@ -142,6 +157,21 @@ def main(argv: list[str] | None = None) -> int:
             "render_pdf.py",
             [args.resume, args.pdf_output, "--document-type", "resume", "--style", args.style],
         )
+
+    if args.command == "pipeline":
+        forwarded = [
+            "--config",
+            args.config,
+            "--days",
+            str(args.days),
+            "--top-n",
+            str(args.top_n),
+            "--output",
+            args.output,
+            *(["--no-scan"] if args.no_scan else []),
+            *(["--cn-focus"] if args.cn_focus else []),
+        ]
+        return _run_script("run_pipeline.py", forwarded)
 
     parser.print_help()
     return 1

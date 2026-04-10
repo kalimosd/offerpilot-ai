@@ -46,6 +46,21 @@ Example:
 python3 skill-pack/scripts/validate_outputs.py "targeted_resume.md" --english-name "GivenName FamilyName"
 ```
 
+### `run_pipeline.py`
+
+Use when you want an end-to-end recommendation cycle in one command:
+
+1. scan portals (optional)
+2. read recent added jobs from history
+3. score and rank jobs
+4. output a Top-N recommendation report
+
+Example:
+
+```bash
+python3 skill-pack/scripts/run_pipeline.py --days 7 --top-n 10 --cn-focus
+```
+
 ## Usage Rules
 
 - Prefer direct file reading when the agent can handle the source natively

@@ -8,6 +8,7 @@ dependencies = [
     "openai",
     "playwright",
     "pypdf",
+    "PyYAML",
     "python-docx",
     "reportlab",
 ]

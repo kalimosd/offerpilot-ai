@@ -41,12 +41,15 @@ OfferPilot focuses on outcomes: clearer positioning, stronger materials, and bet
 | **Job discovery** | Scans career portals and search engines to find relevant openings automatically |
 | **PDF export** | Renders Markdown drafts to styled PDFs with photo embedding support |
 
-## Quick Start
+## Quick Start (Skills-First)
 
 1. Prepare `resume.md` (or `resume.pdf`)
 2. Prepare `job.md` for the target role
-3. Open `skill-pack/README.md`
-4. Run the workflow through Cursor, Claude Code, or a Codex-style agent
+3. Open `skill-pack/README.md` and follow the read order
+4. Trigger with a short intent in your agent, such as:
+   - `按照 offerpilot 优化简历`
+   - `用 offerpilot 做 JD 匹配`
+   - `/offerpilot 根据我简历推荐10个岗位`
 5. Review the generated Markdown output, then export when ready
 
 
@@ -101,9 +104,9 @@ These outputs are meant to be directly usable with minimal editing.
 └── tests/
 ```
 
-## Advanced Usage
+## Optional Helper Commands (CLI)
 
-Optional helper command entry (skill-pack remains primary):
+`skill-pack` is the primary product surface. CLI is an optional helper executor.
 
 ```bash
 # Show all commands
@@ -120,9 +123,12 @@ offerpilot scan --cn-only
 
 # Minimal pipeline: validate input + render resume PDF
 offerpilot run "resume.md" "outputs/resume.pdf" --style ats
+
+# End-to-end job pipeline: scan + rank + Top-N recommendations
+offerpilot pipeline --days 7 --top-n 10 --cn-focus
 ```
 
-Direct script usage:
+Direct script usage (also optional):
 
 Extract text from PDF or DOCX:
 
