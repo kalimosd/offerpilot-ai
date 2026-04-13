@@ -77,6 +77,12 @@ The `render_pdf.py` script supports multiple styles via `--style`:
 - `compact` — tighter margins and spacing for dense content
 - `standard_cn` — centered name and contact info, section headings with solid underline, sub-headings with light dashed underline, dates right-aligned
 
+**默认选择规则：**
+
+- 中文简历 → `standard_cn`
+- 英文简历 → `classic`
+- 除非用户明确指定其他 style
+
 ## PDF Formatting Rules
 
 - Project links (e.g. GitHub URLs) should be placed on a separate line below the project title in small text, not inline with the title

@@ -45,6 +45,20 @@ Input handling rules:
 
 ## 4. Generate the Draft
 
+**⚠ 必须在生成任何内容之前完成以下读取，不可跳过：**
+
+1. 读取 `OUTPUTS.md` — 确认 section 顺序、分离规则、PDF style
+2. 读取 `PROMPTS.md` — 确认写作约束和联系方式处理规则
+3. 如果使用 profile datastore，读取 `DATASTORE.md` — 确认选取和组装逻辑
+
+**关键规则速查（不可违反）：**
+
+- section 顺序：教育背景 → 工作经历 → 强相关项目 → 实习经历 → 其他项目 → 技能
+- 实习经历和工作经历**必须分开**，不能合并
+- 实习经历和项目经历**必须分开**，不能合并
+- PDF 中文简历默认使用 `--style standard_cn`
+- 文件命名：`姓名_公司_岗位_v1`
+
 For jd-fit diagnosis:
 
 - extract the core requirements from the JD
@@ -121,7 +135,15 @@ Preferred order:
 
 1. review Markdown-like content first
 2. revise content if needed
-3. produce final export-ready formatting or PDF
+3. save the final Markdown file
+4. export PDF from the saved Markdown
+
+**交付规则（不可跳过）：**
+
+- 简历类任务必须同时输出 Markdown 和 PDF 两个文件
+- PDF 使用 `render_pdf.py` 生成，默认 style 为 `standard_cn`
+- 仅当用户明确指定其他 style 或输出语言为英文时，才使用其他 style
+- 两个文件的文件名必须一致（仅扩展名不同）
 
 ## Task Checklist
 
@@ -136,4 +158,7 @@ Preferred order:
 - [ ] private files kept out of git unless explicitly requested
 - [ ] English name ordering checked when relevant
 - [ ] final output matches the user's requested language and purpose
+- [ ] for resume tasks, both Markdown and PDF files are saved
+- [ ] PDF uses `standard_cn` style unless user specified otherwise or output is English
+- [ ] Markdown and PDF filenames are aligned (only extension differs)
 - [ ] for recommendation tasks, shortlist includes actionable links and concise reasons

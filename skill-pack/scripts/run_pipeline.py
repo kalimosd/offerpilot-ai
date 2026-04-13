@@ -37,6 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top-n", type=int, default=10, help="Number of recommendations to output.")
     parser.add_argument("--output", default=DEFAULT_OUTPUT, help="Markdown output path.")
     parser.add_argument("--cn-focus", action="store_true", help="Boost Chinese companies and CN API sources.")
+    parser.add_argument("--max-per-company", type=int, default=0, help="Max jobs per company (0=unlimited).")
     return parser.parse_args()
 
 
@@ -174,6 +175,15 @@ def main() -> int:
     candidates = [score_row(row, cfg, args.cn_focus) for row in history_rows]
     unique = dedup_keep_best(candidates)
     ranked = sorted(unique, key=lambda x: (x.score, x.date), reverse=True)
+    if args.max_per_company > 0:
+        capped: list[Candidate] = []
+        counts: dict[str, int] = {}
+        for c in ranked:
+            n = counts.get(c.company, 0)
+            if n < args.max_per_company:
+                capped.append(c)
+                counts[c.company] = n + 1
+        ranked = capped
     top = ranked[: max(args.top_n, 1)]
 
     output_path = Path(args.output)
