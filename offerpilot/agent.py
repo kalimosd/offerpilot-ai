@@ -162,13 +162,26 @@ def _create_client() -> OpenAI:
     from dotenv import load_dotenv
     load_dotenv(REPO_ROOT / ".env")
 
-    api_key = os.environ.get("OFFERPILOT_API_KEY", "")
+    api_key = os.environ.get("OFFERPILOT_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
     if not api_key:
         print("错误：请设置 OFFERPILOT_API_KEY 环境变量或在 .env 文件中配置", file=sys.stderr)
         sys.exit(1)
 
     base_url = os.environ.get("OFFERPILOT_BASE_URL", None)
+    # Auto-detect DeepSeek when using DEEPSEEK_API_KEY fallback
+    if not base_url and not os.environ.get("OFFERPILOT_API_KEY") and os.environ.get("DEEPSEEK_API_KEY"):
+        base_url = "https://api.deepseek.com"
     return OpenAI(api_key=api_key, **({"base_url": base_url} if base_url else {}))
+
+
+def _get_model() -> str:
+    """Get model name from env, auto-detecting DeepSeek fallback."""
+    m = os.environ.get("OFFERPILOT_MODEL", "")
+    if m:
+        return m
+    if not os.environ.get("OFFERPILOT_API_KEY") and os.environ.get("DEEPSEEK_API_KEY"):
+        return "deepseek-chat"
+    return "gpt-4o-mini"
 
 
 def run_agent(user_input: str, max_turns: int = 15) -> None:
@@ -180,9 +193,8 @@ def run_agent(user_input: str, max_turns: int = 15) -> None:
     ]
 
     for turn in range(max_turns):
-        model = os.environ.get("OFFERPILOT_MODEL", "gpt-4o-mini")
         response = client.chat.completions.create(
-            model=model,
+            model=_get_model(),
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
@@ -212,13 +224,49 @@ def run_agent(user_input: str, max_turns: int = 15) -> None:
 
 def main() -> None:
     """CLI entry point for the agent."""
-    if len(sys.argv) < 2:
-        print("用法: offerpilot-agent <指令>")
-        print('示例: offerpilot-agent "帮我分析这个JD和我简历的匹配度，JD在jds/xxx.md，简历在profile_store.yaml"')
+    if len(sys.argv) >= 2:
+        # 单次模式
+        user_input = " ".join(sys.argv[1:])
+        print(f"🚀 OfferPilot Agent\n📝 任务: {user_input}\n")
+        run_agent(user_input)
         return
-    user_input = " ".join(sys.argv[1:])
-    print(f"🚀 OfferPilot Agent 启动\n📝 任务: {user_input}\n")
-    run_agent(user_input)
+
+    # 多轮交互模式
+    print("🚀 OfferPilot Agent（输入 exit 退出）\n")
+    client = _create_client()
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+    while True:
+        try:
+            user_input = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n👋 再见")
+            break
+        if not user_input:
+            continue
+        if user_input.lower() in ("exit", "quit", "q"):
+            print("👋 再见")
+            break
+
+        messages.append({"role": "user", "content": user_input})
+
+        for _ in range(15):
+            response = client.chat.completions.create(
+                model=_get_model(), messages=messages, tools=TOOLS, tool_choice="auto",
+            )
+            msg = response.choices[0].message
+            messages.append(msg)
+
+            if not msg.tool_calls:
+                print(f"\n{msg.content}\n")
+                break
+
+            for tc in msg.tool_calls:
+                fn_name = tc.function.name
+                fn_args = json.loads(tc.function.arguments)
+                print(f"  🔧 {fn_name}({', '.join(f'{k}={v!r}' for k, v in fn_args.items() if k != 'content')})")
+                result = _execute_tool(fn_name, fn_args)
+                messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
 
 
 if __name__ == "__main__":
