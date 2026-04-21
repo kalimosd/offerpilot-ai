@@ -151,16 +151,24 @@ def _execute_tool(name: str, args: dict) -> str:
 
 
 def _create_client() -> OpenAI:
-    """Create OpenAI-compatible client for DeepSeek."""
-    api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+    """Create OpenAI-compatible client from environment variables.
+
+    Supports any OpenAI-compatible API (OpenAI, DeepSeek, Qwen, Ollama, etc.)
+    Configure via environment variables:
+        OFFERPILOT_API_KEY   — API key (required)
+        OFFERPILOT_BASE_URL  — API base URL (optional, defaults to OpenAI)
+        OFFERPILOT_MODEL     — Model name (optional, defaults to gpt-4o-mini)
+    """
+    from dotenv import load_dotenv
+    load_dotenv(REPO_ROOT / ".env")
+
+    api_key = os.environ.get("OFFERPILOT_API_KEY", "")
     if not api_key:
-        from dotenv import load_dotenv
-        load_dotenv(REPO_ROOT / ".env")
-        api_key = os.environ.get("DEEPSEEK_API_KEY", "")
-    if not api_key:
-        print("错误：请设置 DEEPSEEK_API_KEY", file=sys.stderr)
+        print("错误：请设置 OFFERPILOT_API_KEY 环境变量或在 .env 文件中配置", file=sys.stderr)
         sys.exit(1)
-    return OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+
+    base_url = os.environ.get("OFFERPILOT_BASE_URL", None)
+    return OpenAI(api_key=api_key, **({"base_url": base_url} if base_url else {}))
 
 
 def run_agent(user_input: str, max_turns: int = 15) -> None:
@@ -172,8 +180,9 @@ def run_agent(user_input: str, max_turns: int = 15) -> None:
     ]
 
     for turn in range(max_turns):
+        model = os.environ.get("OFFERPILOT_MODEL", "gpt-4o-mini")
         response = client.chat.completions.create(
-            model="deepseek-chat",
+            model=model,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
