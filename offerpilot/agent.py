@@ -1,240 +1,27 @@
-"""OfferPilot Agent — LLM-powered CLI agent for career workflows."""
+"""OfferPilot Agent — LangGraph-powered CLI agent for career workflows."""
 
 from __future__ import annotations
 
-import json
-import os
-import subprocess
 import sys
-from pathlib import Path
 
-from openai import OpenAI
+from langchain_core.messages import HumanMessage
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS_DIR = REPO_ROOT / "skill-pack" / "scripts"
-
-SYSTEM_PROMPT = """你是 OfferPilot Agent，一个求职材料助手。你可以调用工具完成任务。
-
-你支持以下任务类型：
-1. jd-fit — JD 匹配度分析
-2. resume-optimize — 简历优化
-3. resume-target — 针对 JD 的定向简历改写
-4. cover-letter — 求职信生成
-5. extract — 从 PDF/DOCX 提取文本
-6. export-pdf — 将 Markdown 导出为 PDF
-
-工作规则：
-- 不编造事实、不猜测信息
-- 保留候选人真实经历
-- 输出保存到 outputs/ 目录
-- 中文 PDF 使用 standard_cn 样式
-"""
-
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "read_file",
-            "description": "读取文件内容",
-            "parameters": {
-                "type": "object",
-                "properties": {"path": {"type": "string", "description": "文件路径"}},
-                "required": ["path"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "write_file",
-            "description": "写入文件内容",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "path": {"type": "string", "description": "文件路径"},
-                    "content": {"type": "string", "description": "文件内容"},
-                },
-                "required": ["path", "content"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "extract_text",
-            "description": "从 PDF 或 DOCX 文件提取纯文本",
-            "parameters": {
-                "type": "object",
-                "properties": {"path": {"type": "string", "description": "PDF/DOCX 文件路径"}},
-                "required": ["path"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "render_pdf",
-            "description": "将 Markdown 文件渲染为 PDF",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "input_path": {"type": "string", "description": "Markdown 文件路径"},
-                    "output_path": {"type": "string", "description": "PDF 输出路径"},
-                    "style": {
-                        "type": "string",
-                        "enum": ["classic", "ats", "compact", "standard_cn"],
-                        "description": "PDF 样式，中文默认 standard_cn",
-                    },
-                },
-                "required": ["input_path", "output_path"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "list_files",
-            "description": "列出目录下的文件",
-            "parameters": {
-                "type": "object",
-                "properties": {"directory": {"type": "string", "description": "目录路径"}},
-                "required": ["directory"],
-            },
-        },
-    },
-]
+from .graph import build_graph
 
 
-def _execute_tool(name: str, args: dict) -> str:
-    """Execute a tool call and return the result as a string."""
-    try:
-        if name == "read_file":
-            p = Path(args["path"])
-            if not p.exists():
-                return f"错误：文件不存在 {p}"
-            return p.read_text(encoding="utf-8")[:50000]
-
-        if name == "write_file":
-            p = Path(args["path"])
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(args["content"], encoding="utf-8")
-            return f"已写入 {p} ({len(args['content'])} 字符)"
-
-        if name == "extract_text":
-            script = SCRIPTS_DIR / "extract_text.py"
-            result = subprocess.run(
-                [sys.executable, str(script), args["path"]],
-                capture_output=True, text=True, cwd=str(REPO_ROOT),
-            )
-            return result.stdout if result.returncode == 0 else f"错误：{result.stderr}"
-
-        if name == "render_pdf":
-            script = SCRIPTS_DIR / "render_pdf.py"
-            style = args.get("style", "standard_cn")
-            result = subprocess.run(
-                [sys.executable, str(script), args["input_path"], args["output_path"],
-                 "--style", style],
-                capture_output=True, text=True, cwd=str(REPO_ROOT),
-            )
-            return f"PDF 已生成：{args['output_path']}" if result.returncode == 0 else f"错误：{result.stderr}"
-
-        if name == "list_files":
-            d = Path(args["directory"])
-            if not d.is_dir():
-                return f"错误：目录不存在 {d}"
-            files = sorted(d.iterdir())
-            return "\n".join(f.name for f in files if not f.name.startswith("."))
-
-        return f"未知工具：{name}"
-    except Exception as e:
-        return f"工具执行错误：{e}"
+def run_agent(user_input: str) -> None:
+    """Run the agent with a single user input."""
+    graph = build_graph()
+    result = graph.invoke({"messages": [HumanMessage(content=user_input)]})
+    last = result["messages"][-1]
+    print(f"\n{last.content}")
 
 
-def _create_client() -> OpenAI:
-    """Create OpenAI-compatible client from environment variables.
-
-    Supports any OpenAI-compatible API (OpenAI, DeepSeek, Qwen, Ollama, etc.)
-    Configure via environment variables:
-        OFFERPILOT_API_KEY   — API key (required)
-        OFFERPILOT_BASE_URL  — API base URL (optional, defaults to OpenAI)
-        OFFERPILOT_MODEL     — Model name (optional, defaults to gpt-4o-mini)
-    """
-    from dotenv import load_dotenv
-    load_dotenv(REPO_ROOT / ".env")
-
-    api_key = os.environ.get("OFFERPILOT_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
-    if not api_key:
-        print("错误：请设置 OFFERPILOT_API_KEY 环境变量或在 .env 文件中配置", file=sys.stderr)
-        sys.exit(1)
-
-    base_url = os.environ.get("OFFERPILOT_BASE_URL", None)
-    # Auto-detect DeepSeek when using DEEPSEEK_API_KEY fallback
-    if not base_url and not os.environ.get("OFFERPILOT_API_KEY") and os.environ.get("DEEPSEEK_API_KEY"):
-        base_url = "https://api.deepseek.com"
-    return OpenAI(api_key=api_key, **({"base_url": base_url} if base_url else {}))
-
-
-def _get_model() -> str:
-    """Get model name from env, auto-detecting DeepSeek fallback."""
-    m = os.environ.get("OFFERPILOT_MODEL", "")
-    if m:
-        return m
-    if not os.environ.get("OFFERPILOT_API_KEY") and os.environ.get("DEEPSEEK_API_KEY"):
-        return "deepseek-chat"
-    return "gpt-4o-mini"
-
-
-def run_agent(user_input: str, max_turns: int = 15) -> None:
-    """Run the OfferPilot agent with a ReAct loop."""
-    client = _create_client()
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_input},
-    ]
-
-    for turn in range(max_turns):
-        response = client.chat.completions.create(
-            model=_get_model(),
-            messages=messages,
-            tools=TOOLS,
-            tool_choice="auto",
-        )
-        msg = response.choices[0].message
-        messages.append(msg)
-
-        # No tool calls — final answer
-        if not msg.tool_calls:
-            print(f"\n{msg.content}")
-            return
-
-        # Execute tool calls
-        for tc in msg.tool_calls:
-            fn_name = tc.function.name
-            fn_args = json.loads(tc.function.arguments)
-            print(f"  🔧 {fn_name}({', '.join(f'{k}={v!r}' for k, v in fn_args.items() if k != 'content')})")
-            result = _execute_tool(fn_name, fn_args)
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "content": result,
-            })
-
-    print("⚠️ 达到最大轮次限制")
-
-
-def main() -> None:
-    """CLI entry point for the agent."""
-    if len(sys.argv) >= 2:
-        # 单次模式
-        user_input = " ".join(sys.argv[1:])
-        print(f"🚀 OfferPilot Agent\n📝 任务: {user_input}\n")
-        run_agent(user_input)
-        return
-
-    # 多轮交互模式
+def run_interactive() -> None:
+    """Run the agent in multi-turn interactive mode."""
     print("🚀 OfferPilot Agent（输入 exit 退出）\n")
-    client = _create_client()
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    graph = build_graph()
+    messages = []
 
     while True:
         try:
@@ -242,34 +29,27 @@ def main() -> None:
         except (EOFError, KeyboardInterrupt):
             print("\n👋 再见")
             break
-        except UnicodeDecodeError:
-            print("⚠️ 输入编码错误，请重新输入")
-            continue
         if not user_input:
             continue
         if user_input.lower() in ("exit", "quit", "q"):
             print("👋 再见")
             break
 
-        messages.append({"role": "user", "content": user_input})
+        messages.append(HumanMessage(content=user_input))
+        result = graph.invoke({"messages": messages})
+        messages = result["messages"]
+        last = messages[-1]
+        print(f"\n{last.content}\n")
 
-        for _ in range(15):
-            response = client.chat.completions.create(
-                model=_get_model(), messages=messages, tools=TOOLS, tool_choice="auto",
-            )
-            msg = response.choices[0].message
-            messages.append(msg)
 
-            if not msg.tool_calls:
-                print(f"\n{msg.content}\n")
-                break
-
-            for tc in msg.tool_calls:
-                fn_name = tc.function.name
-                fn_args = json.loads(tc.function.arguments)
-                print(f"  🔧 {fn_name}({', '.join(f'{k}={v!r}' for k, v in fn_args.items() if k != 'content')})")
-                result = _execute_tool(fn_name, fn_args)
-                messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
+def main() -> None:
+    """CLI entry point."""
+    if len(sys.argv) >= 2:
+        user_input = " ".join(sys.argv[1:])
+        print(f"🚀 OfferPilot Agent\n📝 任务: {user_input}\n")
+        run_agent(user_input)
+    else:
+        run_interactive()
 
 
 if __name__ == "__main__":
