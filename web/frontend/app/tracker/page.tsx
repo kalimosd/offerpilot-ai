@@ -67,7 +67,7 @@ export default function TrackerPage() {
       <div className="border-b border-zinc-200 px-6 py-3 flex items-center justify-between">
         <h1 className="text-sm font-semibold">Application Tracker</h1>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger><Button size="sm">+ 添加</Button></DialogTrigger>
+          <DialogTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium h-8 px-3 bg-zinc-900 text-white hover:bg-zinc-800">+ 添加</DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>添加申请记录</DialogTitle></DialogHeader>
             <div className="flex flex-col gap-3 mt-2">
@@ -124,7 +124,7 @@ export default function TrackerPage() {
                   <td className="py-2">
                     <Select value={r.status} onValueChange={(v) => v && handleStatusChange(r.url, v)}>
                       <SelectTrigger className="h-7 w-32 border-0 p-0">
-                        <Badge className={STATUS_COLORS[r.status] || ""}>{r.status}</Badge>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[r.status] || ""}`}>{r.status}</span>
                       </SelectTrigger>
                       <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                     </Select>
