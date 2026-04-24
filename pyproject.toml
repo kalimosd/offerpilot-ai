@@ -1,16 +1,20 @@
 [project]
 name = "offerpilot"
-version = "0.1.0"
+version = "0.2.0"
 description = "Skill-first workflow pack for resume diagnosis, JD fit analysis, targeted rewrites, and cover letters."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "openai",
+    "langchain>=0.3",
+    "langgraph>=0.2",
+    "langchain-openai",
+    "langchain-anthropic",
+    "langchain-google-genai",
     "playwright",
     "pypdf",
     "PyYAML",
     "python-docx",
-    "reportlab",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.scripts]
@@ -18,8 +22,11 @@ offerpilot = "offerpilot.cli:main"
 offerpilot-agent = "offerpilot.agent:main"
 
 [project.optional-dependencies]
-agent = ["python-dotenv>=1.0.0"]
+dev = ["pytest"]
 
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["offerpilot"]
