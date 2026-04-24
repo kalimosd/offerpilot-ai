@@ -52,7 +52,7 @@ Tracker 状态流转：discovered → applied → interviewing → offer / rejec
 
 简历格式规则（必须遵守）：
 - section 顺序：教育背景 → 工作经历 → 强相关项目 → 实习经历 → 其他项目 → 技能
-- 实习经历和工作经历必须分开，不能合并为同一个 section
+- 工作经历 section 只放全职工作，实习经历必须放在单独的「实习经历」section，绝对不能合并
 - 实习经历和项目经历必须分开，不能合并为同一个 section
 - 不要生成"工作亮点"等额外总结性 section，除非用户明确要求
 - 联系信息行格式：电话（微信同） | 邮箱 | XX 岁（从 birth_year 计算：当前年份 - birth_year）
