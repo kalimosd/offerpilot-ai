@@ -5,15 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ChatMessage } from "@/components/chat-message";
 import { fetchSSE, uploadFile } from "@/lib/api";
-
-interface Message {
-  role: "user" | "assistant" | "tool";
-  content: string;
-  toolName?: string;
-}
+import { useChatMessages, Message } from "@/lib/chat-context";
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { messages, setMessages } = useChatMessages();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);

@@ -1,12 +1,7 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
-
-interface Message {
-  role: "user" | "assistant" | "tool";
-  content: string;
-  toolName?: string;
-}
+import { Message } from "@/lib/chat-context";
 
 export function ChatMessage({ msg }: { msg: Message }) {
   if (msg.role === "user") {
