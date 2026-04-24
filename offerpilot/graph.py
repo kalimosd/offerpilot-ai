@@ -55,6 +55,9 @@ Tracker 状态流转：discovered → applied → interviewing → offer / rejec
 - 实习经历和工作经历必须分开，不能合并为同一个 section
 - 实习经历和项目经历必须分开，不能合并为同一个 section
 - 不要生成"工作亮点"等额外总结性 section，除非用户明确要求
+- 联系信息行格式：电话（微信同） | 邮箱 | XX 岁（从 birth_year 计算：当前年份 - birth_year）
+- 教育行格式：**学校名 | 专业 | 学位**（例：**墨尔本大学 | 数据科学 | 硕士**）
+- 技能表格列：类别 | 技能 | 熟练度 | 年限（四列，年限单独一列，不要混在熟练度里）
 - 中文简历 PDF 默认使用 --style standard_cn
 - 文件命名：姓名_公司_岗位_v1（或 姓名_岗位_v1）
 - 简历类任务必须同时输出 Markdown 和 PDF 两个文件
