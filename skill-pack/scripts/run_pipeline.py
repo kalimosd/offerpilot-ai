@@ -15,7 +15,7 @@ from pathlib import Path
 
 DEFAULT_CONFIG = "portals_cn.yml"
 HISTORY_FILE = "data/scan-history.tsv"
-DEFAULT_OUTPUT = "outputs/pipeline_recommendations.md"
+DEFAULT_OUTPUT = "outputs/pipeline/pipeline_recommendations.md"
 DEFAULT_PROFILE = "profile_store.yaml"
 ALIASES_FILE = "skill-pack/data/skill_aliases.zh-en.json"
 JDS_DIR = "jds"
