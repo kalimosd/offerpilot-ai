@@ -7,9 +7,6 @@ import json
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
-
-from offerpilot.graph import build_graph, SYSTEM_PROMPT
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -19,6 +16,7 @@ _graph = None
 def _get_graph():
     global _graph
     if _graph is None:
+        from offerpilot.graph import build_graph
         _graph = build_graph()
     return _graph
 
@@ -33,6 +31,7 @@ async def chat(req: ChatRequest):
     """Stream agent response via SSE."""
 
     def _to_lc_message(msg: dict):
+        from langchain_core.messages import HumanMessage, AIMessage
         role = msg.get("role", "")
         content = msg.get("content", "")
         if role == "user":
@@ -42,6 +41,7 @@ async def chat(req: ChatRequest):
         return HumanMessage(content=content)
 
     async def event_stream():
+        from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
         graph = _get_graph()
         messages = [_to_lc_message(m) for m in req.history]
         messages.append(HumanMessage(content=req.message))
