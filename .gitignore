@@ -11,3 +11,5 @@ outputs/
 jds/
 data/
 profile_store.yaml
+web/frontend/node_modules/
+web/frontend/.next/
