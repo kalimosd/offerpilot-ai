@@ -8,6 +8,7 @@ offerpilot.egg-info/
 .cursor/
 .kiro/
 outputs/
+!web/frontend/app/outputs/
 jds/
 data/
 profile_store.yaml
