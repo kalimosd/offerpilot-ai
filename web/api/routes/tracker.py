@@ -80,7 +80,7 @@ def edit(req: TrackerEditRequest):
     with open(tracker_file, encoding="utf-8") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
-            if row["url"].strip() == req.original_url.strip():
+            if row["url"].strip().rstrip("\r") == req.original_url.strip().rstrip("\r"):
                 if req.url is not None:
                     row["url"] = req.url
                 if req.company is not None:

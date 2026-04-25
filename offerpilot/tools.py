@@ -139,7 +139,7 @@ def tracker_update(url: str, status: str, notes: str = "") -> str:
     with open(TRACKER_FILE, encoding="utf-8") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
-            if row["url"] == url:
+            if row["url"].strip().rstrip("\r") == url.strip().rstrip("\r"):
                 row["status"] = status
                 row["last_update"] = datetime.now().strftime("%Y-%m-%d")
                 if status == "applied" and not row.get("applied_date"):
