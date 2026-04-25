@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { getTracker, addTracker, updateTracker, getFollowups } from "@/lib/api";
+import { getTracker, addTracker, updateTracker, getFollowups, editTracker } from "@/lib/api";
 
 const STATUS_COLORS: Record<string, string> = {
   discovered: "bg-zinc-200 text-zinc-700",
@@ -38,7 +38,9 @@ export default function TrackerPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCompany, setFilterCompany] = useState("");
   const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState({ url: "", company: "", title: "", status: "discovered", notes: "" });
+  const [editForm, setEditForm] = useState({ original_url: "", url: "", company: "", title: "", status: "", notes: "" });
 
   const load = useCallback(async () => {
     const status = filterStatus === "all" ? "" : filterStatus;
@@ -54,6 +56,17 @@ export default function TrackerPage() {
     await addTracker(form);
     setForm({ url: "", company: "", title: "", status: "discovered", notes: "" });
     setAddOpen(false);
+    load();
+  }
+
+  function openEdit(row: TrackerRow) {
+    setEditForm({ original_url: row.url, url: row.url, company: row.company, title: row.title, status: row.status, notes: row.notes });
+    setEditOpen(true);
+  }
+
+  async function handleEdit() {
+    await editTracker(editForm);
+    setEditOpen(false);
     load();
   }
 
@@ -80,6 +93,22 @@ export default function TrackerPage() {
               </Select>
               <Input placeholder="备注" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               <Button onClick={handleAdd}>添加</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>编辑申请记录</DialogTitle></DialogHeader>
+            <div className="flex flex-col gap-3 mt-2">
+              <Input placeholder="岗位链接" value={editForm.url} onChange={(e) => setEditForm({ ...editForm, url: e.target.value })} />
+              <Input placeholder="公司" value={editForm.company} onChange={(e) => setEditForm({ ...editForm, company: e.target.value })} />
+              <Input placeholder="岗位" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
+              <Select value={editForm.status} onValueChange={(v) => v && setEditForm({ ...editForm, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+              <Input placeholder="备注" value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+              <Button onClick={handleEdit}>保存</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -114,6 +143,7 @@ export default function TrackerPage() {
                 <th className="py-2 font-medium">状态</th>
                 <th className="py-2 font-medium">更新时间</th>
                 <th className="py-2 font-medium">链接</th>
+                <th className="py-2 font-medium">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -131,6 +161,7 @@ export default function TrackerPage() {
                   </td>
                   <td className="py-2 text-zinc-500">{r.last_update}</td>
                   <td className="py-2"><a href={r.url} target="_blank" className="text-blue-600 hover:underline text-xs">查看</a></td>
+                  <td className="py-2"><Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openEdit(r)}>✏️</Button></td>
                 </tr>
               ))}
             </tbody>

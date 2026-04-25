@@ -52,6 +52,11 @@ export async function updateTracker(data: { url: string; status: string; notes?:
   return res.json();
 }
 
+export async function editTracker(data: { original_url: string; url?: string; company?: string; title?: string; status?: string; notes?: string }) {
+  const res = await fetch(`${API}/api/tracker`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+  return res.json();
+}
+
 export async function getFollowups() {
   const res = await fetch(`${API}/api/tracker/followups`);
   return res.json();
