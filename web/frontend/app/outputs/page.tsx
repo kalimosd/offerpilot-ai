@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { getOutputs, getFileUrl, deleteFile } from "@/lib/api";
+import ReactMarkdown from "react-markdown";
 
 const TABS = [
   { value: "resumes", label: "Resumes" },
@@ -99,7 +100,9 @@ export default function OutputsPage() {
 
           <div className="w-1/2 overflow-y-auto px-6 py-3">
             {preview ? (
-              <pre className="text-xs whitespace-pre-wrap font-mono text-zinc-700 leading-relaxed">{preview}</pre>
+              <div className="prose prose-sm prose-zinc max-w-none">
+                <ReactMarkdown>{preview}</ReactMarkdown>
+              </div>
             ) : (
               <p className="text-zinc-400 text-sm mt-10 text-center">点击文件预览</p>
             )}
