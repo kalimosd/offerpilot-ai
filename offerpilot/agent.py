@@ -12,7 +12,7 @@ from .graph import build_graph
 def run_agent(user_input: str) -> None:
     """Run the agent with a single user input."""
     graph = build_graph()
-    result = graph.invoke({"messages": [HumanMessage(content=user_input)]})
+    result = graph.invoke({"messages": [HumanMessage(content=user_input)]}, {"recursion_limit": 30})
     last = result["messages"][-1]
     print(f"\n{last.content}")
 
@@ -36,7 +36,7 @@ def run_interactive() -> None:
             break
 
         messages.append(HumanMessage(content=user_input))
-        result = graph.invoke({"messages": messages})
+        result = graph.invoke({"messages": messages}, {"recursion_limit": 30})
         messages = result["messages"]
         last = messages[-1]
         print(f"\n{last.content}\n")

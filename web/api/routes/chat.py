@@ -47,7 +47,7 @@ async def chat(req: ChatRequest):
         from langchain_core.messages import HumanMessage
         messages.append(HumanMessage(content=req.message))
 
-        for event in graph.stream({"messages": messages}, stream_mode="updates"):
+        for event in graph.stream({"messages": messages}, {"recursion_limit": 30}, stream_mode="updates"):
             for node_name, node_output in event.items():
                 for msg in node_output.get("messages", []):
                     if isinstance(msg, AIMessage):
