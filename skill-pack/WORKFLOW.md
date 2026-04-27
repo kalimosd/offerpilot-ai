@@ -112,12 +112,14 @@ For mock interview:
 - read `MOCK_INTERVIEW.md` before generating any content
 - follow the two-phase workflow: question generation then live simulation
 - both JD and profile datastore are required inputs
+- save outputs to `outputs/interview/`
 
 For product research:
 
 - read `PRODUCT_RESEARCH.md` before generating any content
 - follow the six-step execution flow: JD parsing, research, product intro, interview prediction, profile analysis, save
 - JD is required; profile datastore is optional but enhances output
+- save outputs to `outputs/research/`
 
 ## 5. Review the Draft
 
@@ -153,8 +155,16 @@ Preferred order:
 
 1. review Markdown-like content first
 2. revise content if needed
-3. save the final Markdown file
+3. save the final Markdown file to the correct `outputs/` subdirectory
 4. export PDF from the saved Markdown
+
+**输出目录规则（不可跳过）：**
+
+- `outputs/resumes/` — 简历优化、定向改写、JD 匹配度分析
+- `outputs/research/` — 产品研究
+- `outputs/interview/` — 面试题单、面试评估、面试准备
+- `outputs/pipeline/` — 扫描推荐、pipeline 报告
+- `outputs/misc/` — 其他
 
 **交付规则（不可跳过）：**
 

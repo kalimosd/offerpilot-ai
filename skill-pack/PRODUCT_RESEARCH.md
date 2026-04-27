@@ -69,9 +69,9 @@ Optional:
 
 ### Step 6: 保存文件
 
-保存到 `outputs/` 目录：
+保存到 `outputs/research/` 目录：
 ```
-姓名_公司_岗位_产品研究_v1.md
+outputs/research/姓名_公司_岗位_产品研究_v1.md
 ```
 
 无 profile_store 时姓名使用"候选人"占位。

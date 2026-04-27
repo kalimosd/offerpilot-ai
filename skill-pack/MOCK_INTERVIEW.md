@@ -50,10 +50,10 @@ Each question must include:
 
 ### Question Sheet Output
 
-Save to `outputs/` as Markdown:
+Save to `outputs/interview/` as Markdown:
 
 ```
-姓名_公司_岗位_面试题单_v1.md
+outputs/interview/姓名_公司_岗位_面试题单_v1.md
 ```
 
 Structure:
@@ -111,10 +111,10 @@ Only proceed to Phase 2 when the user explicitly says to start.
 
 After the simulation ends (all questions done or user says "结束"), generate an evaluation report.
 
-Save to `outputs/` as Markdown:
+Save to `outputs/interview/` as Markdown:
 
 ```
-姓名_公司_岗位_面试评估_v1.md
+outputs/interview/姓名_公司_岗位_面试评估_v1.md
 ```
 
 Structure:

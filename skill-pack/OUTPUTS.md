@@ -1,5 +1,23 @@
 # Outputs
 
+## Output Directory Structure
+
+All outputs are saved under `outputs/` with the following subdirectories:
+
+| Subdirectory | Content |
+|---|---|
+| `outputs/resumes/` | 简历优化、定向改写、JD 匹配度分析 |
+| `outputs/research/` | 产品研究 |
+| `outputs/interview/` | 面试题单、面试评估、面试准备整合 |
+| `outputs/pipeline/` | 扫描推荐、pipeline 报告 |
+| `outputs/misc/` | 其他（项目讲解、设计方案等） |
+
+Rules:
+
+- 所有输出必须保存到对应子目录，不允许直接保存到 `outputs/` 根目录
+- 子目录会自动创建（agent 的 write_file 工具会 mkdir -p）
+- 分类依据是任务类型，不是文件格式
+
 ## Output Categories
 
 OfferPilot supports three main output types:
@@ -110,9 +128,9 @@ Use scheme `B` by default for locally saved resume deliverables:
 
 Examples:
 
-- `候选人A_安卓开发工程师_v1.md`
-- `候选人A_小米_安卓开发工程师_v1.md`
-- `候选人A_小米_安卓开发工程师_v2.pdf`
+- `outputs/resumes/候选人A_安卓开发工程师_v1.md`
+- `outputs/resumes/候选人A_小米_安卓开发工程师_v1.md`
+- `outputs/resumes/候选人A_小米_安卓开发工程师_v2.pdf`
 
 If the user explicitly requests anonymized sample files, replace `姓名` with an obvious example name rather than a real person.
 
@@ -135,14 +153,14 @@ If the user explicitly requests anonymized sample files, replace `姓名` with a
 - ~60% strong-point deep-dive, ~40% weakness probing
 - each question includes: tag, difficulty, topic, examination points, reference answer key points
 - reference answers are concise key points, not full essays
-- naming: `姓名_公司_岗位_面试题单_v1.md`
+- naming: `outputs/interview/姓名_公司_岗位_面试题单_v1.md`
 
 ## Mock Interview Evaluation Report Expectations
 
 - per-question scoring (1-5 stars) with highlights, gaps, and improvement suggestions
 - overall summary in 2-3 sentences
 - review checklist with priority levels (高/中/低) and concrete learning recommendations
-- naming: `姓名_公司_岗位_面试评估_v1.md`
+- naming: `outputs/interview/姓名_公司_岗位_面试评估_v1.md`
 
 ## English Name Check
 
