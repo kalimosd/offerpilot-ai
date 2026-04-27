@@ -54,9 +54,15 @@ def extract_text(path: str) -> str:
 def render_pdf(input_path: str, output_path: str, style: str = "standard_cn") -> str:
     """将 Markdown 文件渲染为 PDF。style 可选: classic, ats, compact, standard_cn。"""
     script = SCRIPTS_DIR / "render_pdf.py"
+    cmd = [sys.executable, str(script), input_path, output_path, "--style", style]
+    # Auto-detect photo
+    photo = REPO_ROOT / "assets" / "photo.jpg"
+    if not photo.exists():
+        photo = REPO_ROOT / "assets" / "photo.png"
+    if photo.exists():
+        cmd.extend(["--photo", str(photo)])
     result = subprocess.run(
-        [sys.executable, str(script), input_path, output_path, "--style", style],
-        capture_output=True, text=True, cwd=str(REPO_ROOT),
+        cmd, capture_output=True, text=True, cwd=str(REPO_ROOT),
     )
     return f"PDF 已生成：{output_path}" if result.returncode == 0 else f"错误：{result.stderr}"
 
