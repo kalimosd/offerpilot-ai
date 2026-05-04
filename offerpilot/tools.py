@@ -10,6 +10,8 @@ from pathlib import Path
 
 from langchain_core.tools import tool
 
+from .script_loader import load_script_module
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "skill-pack" / "scripts"
 TRACKER_FILE = REPO_ROOT / "data" / "tracker.tsv"
@@ -42,29 +44,36 @@ def write_file(path: str, content: str) -> str:
 @tool
 def extract_text(path: str) -> str:
     """从 PDF 或 DOCX 文件提取纯文本。"""
-    script = SCRIPTS_DIR / "extract_text.py"
-    result = subprocess.run(
-        [sys.executable, str(script), path],
-        capture_output=True, text=True, cwd=str(REPO_ROOT),
-    )
-    return result.stdout if result.returncode == 0 else f"错误：{result.stderr}"
+    extract_module = load_script_module("offerpilot_extract_text", str(SCRIPTS_DIR / "extract_text.py"))
+
+    try:
+        return extract_module.load_text_from_file(path)
+    except Exception as e:
+        return f"错误：{e}"
 
 
 @tool
 def render_pdf(input_path: str, output_path: str, style: str = "standard_cn") -> str:
     """将 Markdown 文件渲染为 PDF。style 可选: classic, ats, compact, standard_cn。"""
-    script = SCRIPTS_DIR / "render_pdf.py"
-    cmd = [sys.executable, str(script), input_path, output_path, "--style", style]
-    # Auto-detect photo
-    photo = REPO_ROOT / "assets" / "photo.jpg"
-    if not photo.exists():
-        photo = REPO_ROOT / "assets" / "photo.png"
-    if photo.exists():
-        cmd.extend(["--photo", str(photo)])
-    result = subprocess.run(
-        cmd, capture_output=True, text=True, cwd=str(REPO_ROOT),
-    )
-    return f"PDF 已生成：{output_path}" if result.returncode == 0 else f"错误：{result.stderr}"
+    render_module = load_script_module("offerpilot_render_pdf", str(SCRIPTS_DIR / "render_pdf.py"))
+
+    input_p = Path(input_path)
+    if not input_p.exists():
+        return f"错误：文件不存在 {input_p}"
+
+    markdown_text = input_p.read_text(encoding="utf-8")
+    photo_path = None
+    for ext in (".jpg", ".png"):
+        candidate = REPO_ROOT / "assets" / f"photo{ext}"
+        if candidate.exists():
+            photo_path = str(candidate)
+            break
+
+    try:
+        render_module.render_markdown_to_pdf(markdown_text, output_path, style=style, photo_path=photo_path)
+        return f"PDF 已生成：{output_path}"
+    except Exception as e:
+        return f"错误：{e}"
 
 
 @tool
@@ -108,7 +117,43 @@ def run_pipeline(config: str = "portals_cn.yml", days: int = 7,
     if cn_focus:
         cmd.append("--cn-focus")
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(REPO_ROOT))
-    return result.stdout + (f"\n{result.stderr}" if result.stderr else "")
+    output = result.stdout + (f"\n{result.stderr}" if result.stderr else "")
+    if result.returncode != 0:
+        details = output.strip() or "(no output)"
+        return f"错误：pipeline 运行失败 (exit code {result.returncode})\n{details}"
+    return output
+
+
+@tool
+def validate_inputs(paths: list[str]) -> str:
+    """校验 OfferPilot 输入文件是否存在、格式是否支持。"""
+    if not paths:
+        return "错误：请提供至少一个输入文件路径"
+    script = SCRIPTS_DIR / "validate_inputs.py"
+    result = subprocess.run(
+        [sys.executable, str(script), *paths],
+        capture_output=True, text=True, cwd=str(REPO_ROOT),
+    )
+    output = result.stdout + (f"\n{result.stderr}" if result.stderr else "")
+    if result.returncode != 0:
+        return f"错误：输入校验失败 (exit code {result.returncode})\n{output.strip()}"
+    return output
+
+
+@tool
+def validate_outputs(paths: list[str], english_name: str = "") -> str:
+    """校验 OfferPilot 输出文件命名和可选英文名格式。"""
+    if not paths:
+        return "错误：请提供至少一个输出文件路径"
+    script = SCRIPTS_DIR / "validate_outputs.py"
+    cmd = [sys.executable, str(script), *paths]
+    if english_name:
+        cmd.extend(["--english-name", english_name])
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(REPO_ROOT))
+    output = result.stdout + (f"\n{result.stderr}" if result.stderr else "")
+    if result.returncode != 0:
+        return f"错误：输出校验失败 (exit code {result.returncode})\n{output.strip()}"
+    return output
 
 
 @tool
@@ -233,7 +278,7 @@ def batch_evaluate(jd_paths: list[str], profile_path: str = "profile_store.yaml"
 
 ALL_TOOLS = [
     read_file, write_file, extract_text, render_pdf, list_files,
-    scan_portals, run_pipeline,
+    scan_portals, run_pipeline, validate_inputs, validate_outputs,
     tracker_add, tracker_update, tracker_query, check_followups,
     batch_evaluate,
 ]

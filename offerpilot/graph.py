@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
-from langchain_core.messages import SystemMessage
+from datetime import datetime
+from pathlib import Path
+
+from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 
-from .llm import get_llm
+from .intent import classify_user_intent
+from .llm import get_llm, PRECISE_TEMPERATURE
+from .script_loader import load_script_module
 from .state import AgentState
 from .tools import ALL_TOOLS
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS_DIR = REPO_ROOT / "skill-pack" / "scripts"
 
 SYSTEM_PROMPT = """你是 OfferPilot Agent，一个 AI 求职助手。你可以调用工具完成任务。
 
@@ -68,9 +76,184 @@ Tracker 状态流转：discovered → applied → interviewing → offer / rejec
 - 源简历中有的联系方式必须保留，没有的不要猜测填充
 """
 
+def _classify_intent(state: AgentState) -> dict:
+    """Classify user intent from the last message: pipeline, batch_evaluate, or general."""
+    last_msg = state["messages"][-1]
+    content = last_msg.content if isinstance(last_msg, HumanMessage) else ""
+    return classify_user_intent(content)
+
+
+def _route_by_intent(state: AgentState) -> str:
+    task = state.get("task_type", "general")
+    if task == "pipeline":
+        return "pipeline"
+    if task == "batch_evaluate":
+        return "batch_evaluate"
+    return "agent"
+
+
+# === Pipeline subgraph ===
+
+def _build_pipeline_subgraph():
+    """Deterministic pipeline subgraph: scan portals → rank candidates → write report.
+
+    Replaces the previous approach of having the LLM reason through pipeline steps
+    via tool calls. The subgraph runs the scan, ranking, and report writing as a
+    fixed sequence without LLM planning overhead.
+    """
+    run_pipeline = load_script_module("offerpilot_run_pipeline", str(SCRIPTS_DIR / "run_pipeline.py"))
+
+    graph = StateGraph(AgentState)
+
+    def scan_step(state: AgentState) -> dict:
+        """Run portal scanner to discover new jobs."""
+        config_path = state.get("pipeline_config", "portals_cn.yml")
+        result_code = run_pipeline.run_scan(config_path)
+        if result_code != 0:
+            return {"messages": [AIMessage(content=f"Pipeline scan failed with exit code {result_code}. Check portal config `{config_path}` and scanner logs.")]}
+        stdout = f"Scan completed with config `{config_path}`."
+        return {"messages": [AIMessage(content=f"Scan results:\n{stdout[:3000]}")]}
+
+    def rank_and_report(state: AgentState) -> dict:
+        """Score jobs from scan history, rank them, and write the recommendation report."""
+        config_path = state.get("pipeline_config", "portals_cn.yml")
+        days = state.get("pipeline_days", 7)
+        top_n = state.get("pipeline_top_n", 10)
+        cn_focus = state.get("pipeline_cn_focus", False)
+        profile_path = state.get("batch_profile_path", "profile_store.yaml")
+
+        cfg = run_pipeline.load_config(config_path)
+        profile_tags_raw = run_pipeline.load_profile_tags(REPO_ROOT / profile_path)
+        aliases = run_pipeline.load_aliases(REPO_ROOT / "skill-pack" / "data" / "skill_aliases.zh-en.json")
+        profile_tags = run_pipeline.expand_profile_tags(profile_tags_raw, aliases) if profile_tags_raw else set()
+
+        history_rows = run_pipeline.load_recent_added(REPO_ROOT / "data" / "scan-history.tsv", days)
+        if not history_rows:
+            return {"messages": [AIMessage(content="No recent jobs found in scan history. Try increasing the time window with e.g. \"run pipeline last 14 days\".")]}
+
+        candidates = [run_pipeline.score_row(row, cfg, cn_focus, profile_tags) for row in history_rows]
+        unique = run_pipeline.dedup_keep_best(candidates)
+        ranked = sorted(unique, key=lambda x: (x.score, x.date), reverse=True)
+        top = ranked[:top_n]
+
+        output_path = REPO_ROOT / "outputs" / "pipeline" / "pipeline_recommendations.md"
+        run_pipeline.write_report(output_path, top, days, top_n, bool(profile_tags))
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        lines = [f"## Pipeline Recommendations ({now})", ""]
+        lines.append(f"Scored {len(history_rows)} recent jobs, top {len(top)} below:\n")
+        for idx, c in enumerate(top, 1):
+            reason = " / ".join(c.reasons)
+            lines.append(f"{idx}. **{c.company}** | {c.title} | Score: {c.score:.1f}")
+            lines.append(f"   {reason} | [View]({c.url})")
+        lines.append(f"\nFull report: `{output_path}`")
+
+        return {"messages": [AIMessage(content="\n".join(lines))]}
+
+    graph.add_node("scan", scan_step)
+    graph.add_node("rank", rank_and_report)
+    graph.set_entry_point("scan")
+    graph.add_edge("scan", "rank")
+    graph.add_edge("rank", END)
+
+    return graph.compile()
+
+
+# === Batch evaluate subgraph ===
+
+def _build_batch_evaluate_subgraph():
+    """Batch JD evaluation subgraph: load JDs → evaluate each → aggregate.
+
+    Each JD is evaluated independently with a low-temperature LLM call to ensure
+    consistent scoring. Results are aggregated into a single ranked summary.
+    """
+    graph = StateGraph(AgentState)
+
+    def load_and_evaluate(state: AgentState) -> dict:
+        """Load JDs from the jds/ directory and evaluate each one against the profile."""
+        jds_dir = REPO_ROOT / "jds"
+        if not jds_dir.is_dir():
+            return {"messages": [AIMessage(content="No `jds/` directory found. Upload JDs first.")]}
+
+        jd_files = sorted([
+            f for f in jds_dir.iterdir()
+            if f.suffix == ".md" and not f.name.startswith(".")
+        ])[:20]
+
+        if not jd_files:
+            return {"messages": [AIMessage(content="No JDs found in `jds/` directory.")]}
+
+        profile_path = state.get("batch_profile_path", "profile_store.yaml")
+        profile_p = REPO_ROOT / profile_path
+        profile_text = profile_p.read_text(encoding="utf-8") if profile_p.exists() else ""
+
+        llm = get_llm(temperature=PRECISE_TEMPERATURE)
+        results = []
+
+        for jd_file in jd_files:
+            jd_text = jd_file.read_text(encoding="utf-8")[:6000]
+            jd_name = jd_file.stem.replace("_", " ").replace("-", " ")
+
+            prompt = f"""Evaluate this job description against the candidate profile. Score from 0-5 (0=no match, 5=perfect). Give a one-line reason.
+
+Profile:
+{profile_text[:3000]}
+
+Job: {jd_name}
+{jd_text[:5000]}
+
+Reply in this exact format: SCORE|ONE-LINE REASON (example: "4.2|Strong overlap in AI agent engineering and LLM experience")"""
+
+            response = llm.invoke([HumanMessage(content=prompt)])
+            results.append((jd_name, response.content.strip()))
+
+        results.sort(key=lambda x: _parse_score(x[1]), reverse=True)
+
+        lines = [f"## Batch Evaluation ({len(results)} JDs)\n"]
+        lines.append("| Rank | Score | Company / Role | Reason |")
+        lines.append("|------|-------|----------------|--------|")
+        for idx, (name, eval_line) in enumerate(results, 1):
+            score, reason = _parse_score_and_reason(eval_line)
+            lines.append(f"| {idx} | {score:.1f} | {name} | {reason} |")
+
+        return {"messages": [AIMessage(content="\n".join(lines))]}
+
+    graph.add_node("evaluate", load_and_evaluate)
+    graph.set_entry_point("evaluate")
+    graph.add_edge("evaluate", END)
+
+    return graph.compile()
+
+
+def _parse_score(eval_line: str) -> float:
+    """Extract numeric score from an evaluation line like '4.2|reason'."""
+    try:
+        return float(eval_line.split("|")[0].strip())
+    except (ValueError, IndexError):
+        return 0.0
+
+
+def _parse_score_and_reason(eval_line: str) -> tuple[float, str]:
+    """Extract score and reason from evaluation output. Returns (score, reason)."""
+    parts = eval_line.split("|", 1)
+    try:
+        score = float(parts[0].strip())
+    except (ValueError, IndexError):
+        score = 0.0
+    reason = parts[1].strip() if len(parts) > 1 else eval_line
+    return score, reason
+
+
+# === Main graph ===
 
 def build_graph():
-    """Build and compile the agent graph."""
+    """Build and compile the agent graph with intent routing and specialized subgraphs.
+
+    Graph structure:
+        classify_intent → pipeline subgraph → END
+        classify_intent → batch_evaluate subgraph → END
+        classify_intent → agent → tools → agent (ReAct loop for general tasks)
+    """
     llm = get_llm()
     llm_with_tools = llm.bind_tools(ALL_TOOLS)
 
@@ -87,9 +270,20 @@ def build_graph():
     tool_node = ToolNode(ALL_TOOLS)
 
     graph = StateGraph(AgentState)
+    graph.add_node("classify_intent", _classify_intent)
+    graph.add_node("pipeline", _build_pipeline_subgraph())
+    graph.add_node("batch_evaluate", _build_batch_evaluate_subgraph())
     graph.add_node("agent", agent_node)
     graph.add_node("tools", tool_node)
-    graph.set_entry_point("agent")
+
+    graph.set_entry_point("classify_intent")
+    graph.add_conditional_edges("classify_intent", _route_by_intent, {
+        "pipeline": "pipeline",
+        "batch_evaluate": "batch_evaluate",
+        "agent": "agent",
+    })
+    graph.add_edge("pipeline", END)
+    graph.add_edge("batch_evaluate", END)
     graph.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
     graph.add_edge("tools", "agent")
 
