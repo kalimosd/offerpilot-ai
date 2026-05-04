@@ -5,47 +5,60 @@
 [![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)](https://playwright.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-OfferPilot is a local-first AI career agent for resume rewriting, JD evaluation, job discovery, and application tracking.
+OfferPilot 是一个本地优先的 AI 求职助手，用来把真实经历整理成更强的简历、JD 匹配分析、定向改写、岗位推荐、申请追踪和面试准备材料。
 
-It is designed around one rule: use the candidate's real experience. No invented projects, no fake metrics, no made-up contact details.
+它的底线很简单：**只使用你的真实经历，不编项目、不编数据、不编联系方式。**
 
-[中文说明](./README_zh.md)
+[English](./README_en.md)
 
 ![OfferPilot Web UI](docs/web-ui-screenshot.png)
 
-## What This Project Is
+## 这个项目是什么
 
-OfferPilot has three entry points:
+OfferPilot 是一个完整项目，不只是一个分支实验。它有三种使用形态：
 
-- **Agent CLI**: the main interface. Ask in natural language and the LangGraph agent routes the task.
-- **Web UI**: a local chat, tracker, and outputs dashboard.
-- **Skill Pack**: portable workflow documents and helper scripts for Cursor, Claude Code, Codex, and similar coding agents.
+- **Agent CLI**：主入口。用自然语言描述任务，LangGraph Agent 自动判断流程并调用工具。
+- **Web UI**：本地可视化界面，包含 Chat、Tracker、Outputs。
+- **Skill Pack**：可移植规则层，给 Cursor、Claude Code、Codex 等 AI 编程工具使用。
 
-The agent now uses explicit intent routing:
+可以这样理解：
 
-- General career tasks go through the normal ReAct tool loop.
-- Pipeline requests run a deterministic scan, rank, and report workflow.
-- Batch evaluation requests load local JD files and score them with a low-temperature LLM call.
+```text
+skill-pack = 规则层 / 方法论 / 可移植工作流
+agent      = skill-pack + runtime + tools + UI
+```
 
-## What You Can Do
+当前 Agent 会先做意图路由：
 
-- Improve a general-purpose resume without fabricating experience.
-- Rewrite a resume for a specific JD.
-- Analyze JD fit and identify gaps.
-- Batch-evaluate multiple JDs in `jds/`.
-- Scan job portals and generate ranked recommendations.
-- Track applications from `discovered` to `applied`, `interviewing`, `offer`, `rejected`, or `ghosted`.
-- Generate cover letters, LinkedIn outreach messages, mock interview prep, and product research notes.
-- Export Markdown outputs to styled PDFs.
+- 普通求职任务走 ReAct 工具循环。
+- pipeline 任务走固定的扫描、排序、报告流程。
+- 批量 JD 评估走专门的批处理流程，用低温度 LLM 保持评分稳定。
 
-## Requirements
+## 能做什么
+
+| 能力 | 说明 |
+|---|---|
+| 简历优化 | 精炼措辞、强化 bullet point、提升可读性 |
+| 定向改写 | 围绕目标 JD 重排和改写经历 |
+| JD 匹配分析 | 识别匹配点、差距、关键词和改写优先级 |
+| 结构化评估 | 10 维度打分，输出 A-F 等级和投递建议 |
+| 批量评估 | 对多个 JD 做排序，快速筛选值得投递的岗位 |
+| 岗位扫描 | 扫描招聘网站并生成推荐报告 |
+| 申请追踪 | 管理申请状态和 follow-up 提醒 |
+| 求职信 | 基于真实经历生成针对性 cover letter |
+| LinkedIn 外联 | 生成简洁、个性化的 outreach 消息 |
+| 模拟面试 | 生成题单、模拟问答并输出评估报告 |
+| 产品研究 | 针对目标公司/产品做面试前研究 |
+| PDF 导出 | 将 Markdown 输出渲染成 PDF |
+
+## 环境要求
 
 - Python 3.10+
-- Node.js 18+ if you want to run the Web UI
-- An LLM API key, such as DeepSeek, Anthropic, Google, or OpenAI
-- Optional but recommended: Playwright Chromium for PDF rendering and browser-based scraping
+- Node.js 18+，仅 Web UI 需要
+- 至少一个 LLM API key，例如 DeepSeek、Claude、Gemini 或 OpenAI
+- 推荐安装 Playwright Chromium，用于 PDF 渲染和部分网页扫描能力
 
-## Installation
+## 安装
 
 ```bash
 git clone https://github.com/kalimosd/offerpilot-ai.git
@@ -58,17 +71,21 @@ pip install -e ".[dev]"
 python -m playwright install chromium
 ```
 
-If you only want to run the agent without tests, `pip install -e .` is enough. The `dev` extra installs `pytest`.
+如果只跑 Agent，不跑测试，可以用：
 
-## LLM Configuration
+```bash
+pip install -e .
+```
 
-Create a local `.env` file in the repository root. This file should not be committed.
+## 配置 LLM
+
+在项目根目录创建 `.env`：
 
 ```bash
 touch .env
 ```
 
-Use one of the following configurations.
+然后按你使用的模型填写其中一种配置。
 
 ### DeepSeek
 
@@ -99,37 +116,43 @@ OFFERPILOT_MODEL=gpt-4o-mini
 OPENAI_API_KEY=your-openai-key
 ```
 
-Optional temperature override:
+可选：覆盖默认温度。
 
 ```bash
 OFFERPILOT_TEMPERATURE=0.3
 ```
 
-OfferPilot also has task defaults in code: `0.3` for general agent work, `0.1` for precise evaluation, and `0.7` for creative writing.
+代码里也有任务默认值：普通 Agent 任务 `0.3`，JD/简历评估类精确任务 `0.1`，创意写作类任务 `0.7`。
 
-## Prepare Your Data
+## 准备个人资料和 JD
 
-Create a personal profile store:
+先创建个人素材库：
 
 ```bash
 cp skill-pack/templates/profile_store.yaml profile_store.yaml
 ```
 
-Edit `profile_store.yaml` with your real background:
+`profile_store.yaml` 不是最终简历，而是事实数据库。建议把经历写全，不要一开始就压缩。
 
-- `meta`: name, email, phone, update date
-- `experience`: work history and bullets
-- `projects`: personal, open-source, school, or side projects
-- `skills`: skills with evidence
-- `education`, `certifications`, `achievements`
+主要字段：
 
-Put job descriptions under `jds/`:
+| 字段 | 说明 |
+|---|---|
+| `meta` | 姓名、邮箱、电话、更新时间 |
+| `experience` | 工作经历，每段经历包含多个 bullet |
+| `projects` | 项目经历、开源、比赛、校园项目等 |
+| `skills` | 技能、熟练度、使用年限、证据 |
+| `education` | 教育背景 |
+| `certifications` | 证书 |
+| `achievements` | 奖项或荣誉 |
+
+把 JD 放到 `jds/`：
 
 ```bash
 mkdir -p jds outputs/resumes outputs/pipeline outputs/interview outputs/research outputs/misc
 ```
 
-Example:
+示例结构：
 
 ```text
 jds/
@@ -137,45 +160,45 @@ jds/
   meituan-algorithm-engineer.md
 ```
 
-Private local files such as `profile_store.yaml`, `jds/`, `outputs/`, and `data/` are intended to stay out of git.
+`profile_store.yaml`、`jds/`、`outputs/`、`data/` 都是本地私有数据，默认不应该提交到 git。
 
-## Run The Agent
+## 运行 Agent
 
-Single-shot mode:
+单次模式：
 
 ```bash
-python -m offerpilot.agent "analyze the fit between jds/anthropic-ai-agent-engineer.md and profile_store.yaml"
-python -m offerpilot.agent "batch evaluate all JDs in jds/"
-python -m offerpilot.agent "run pipeline, scan last 7 days, recommend top 10"
-python -m offerpilot.agent "check which applications need follow-up"
+python -m offerpilot.agent "分析 jds/anthropic-ai-agent-engineer.md 和 profile_store.yaml 的匹配度"
+python -m offerpilot.agent "批量评估 jds/ 目录下所有 JD"
+python -m offerpilot.agent "运行 pipeline，扫描最近 7 天的岗位，推荐 Top 10"
+python -m offerpilot.agent "查看有哪些申请需要跟进"
 ```
 
-Interactive mode:
+多轮交互模式：
 
 ```bash
 python -m offerpilot.agent
 ```
 
-Then type requests such as:
+进入后可以输入：
 
 ```text
-optimize my resume using profile_store.yaml
-rewrite my resume for jds/anthropic-ai-agent-engineer.md
-export the latest resume to PDF
+帮我优化 profile_store.yaml 里的简历素材
+针对 jds/anthropic-ai-agent-engineer.md 做定向改写
+把最新简历导出成 PDF
 exit
 ```
 
-You can also use the installed console script:
+也可以使用安装后的命令：
 
 ```bash
-offerpilot-agent "batch evaluate all JDs in jds/"
+offerpilot-agent "批量评估 jds/ 目录下所有 JD"
 ```
 
 ## Web UI
 
-The Web UI has a FastAPI backend and a Next.js frontend.
+Web UI 使用 FastAPI 后端和 Next.js 前端。
 
-Install backend and frontend dependencies:
+先安装 Web 依赖：
 
 ```bash
 source .venv/bin/activate
@@ -186,45 +209,64 @@ npm install
 cd ../..
 ```
 
-Start both services:
+一条命令启动：
 
 ```bash
 ./start.sh
 ```
 
-Open:
+打开：
 
 ```text
 http://localhost:3000
 ```
 
-Manual startup:
+手动启动方式：
 
 ```bash
-# Terminal 1
+# 终端 1
 source .venv/bin/activate
 uvicorn web.api.main:app --port 8000
 
-# Terminal 2
+# 终端 2
 cd web/frontend
 npm run dev -- --port 3000
 ```
 
-## Skill Pack Mode
+## Pipeline 是什么
 
-Use `skill-pack/` when you want a portable workflow for an AI coding agent rather than the built-in OfferPilot agent.
+这里的 pipeline 指岗位扫描和推荐流程，不是泛泛的数据管道。
 
-Recommended reading order:
+它做五件事：
+
+1. 根据配置扫描招聘网站。
+2. 从 `data/scan-history.tsv` 读取最近新增岗位。
+3. 根据职位配置、个人 profile 标签、中英技能别名打分。
+4. 去重并排序。
+5. 写出 `outputs/pipeline/pipeline_recommendations.md`。
+
+示例：
+
+```bash
+python -m offerpilot.agent "运行 pipeline，扫描最近 14 天，推荐前 20 个国内岗位"
+```
+
+## Skill Pack 模式
+
+如果你不是直接跑 OfferPilot Agent，而是想让 Cursor、Claude Code、Codex 这类工具按照一套文档流程工作，就使用 `skill-pack/`。
+
+建议阅读顺序：
 
 1. `skill-pack/WORKFLOW.md`
 2. `skill-pack/INPUTS.md`
-3. `skill-pack/JD_MATCHING.md` for China-first JD matching
-4. `skill-pack/PROMPTS.md`
-5. `skill-pack/OUTPUTS.md`
-6. `skill-pack/scripts/README.md` when local helpers are needed
-7. `skill-pack/adapters/` for Cursor, Claude Code, or Codex wrappers
+3. 国内岗位匹配任务阅读 `skill-pack/JD_MATCHING.md`
+4. 结构化评估阅读 `skill-pack/EVALUATION.md`
+5. 申请追踪阅读 `skill-pack/TRACKER.md`
+6. 外联消息阅读 `skill-pack/OUTREACH.md`
+7. 需要本地脚本时阅读 `skill-pack/scripts/README.md`
+8. 需要平台适配时阅读 `skill-pack/adapters/`
 
-Useful helper scripts:
+常用脚本：
 
 ```bash
 python skill-pack/scripts/validate_inputs.py profile_store.yaml jds/example.md
@@ -233,34 +275,30 @@ python skill-pack/scripts/render_pdf.py outputs/resumes/resume.md outputs/resume
 python skill-pack/scripts/validate_outputs.py outputs/resumes/resume.md
 ```
 
-The Agent CLI exposes `validate_inputs` and `validate_outputs` as tools, so validation can also happen inside agent workflows.
+Agent 里也已经接入 `validate_inputs` 和 `validate_outputs`，可以在对话流程里自动调用。
 
-## Pipeline Workflow
+## 输出目录约定
 
-The pipeline is for job discovery and recommendation:
+| 目录 | 内容 |
+|---|---|
+| `outputs/resumes/` | 简历优化、定向改写、JD 匹配、结构化评估 |
+| `outputs/research/` | 产品研究 |
+| `outputs/interview/` | 面试题单、面试评估 |
+| `outputs/pipeline/` | 岗位扫描和推荐报告 |
+| `outputs/misc/` | 外联消息、项目讲解、其他材料 |
 
-1. Scan configured job portals.
-2. Load recent entries from `data/scan-history.tsv`.
-3. Score jobs using portal config, profile tags, and bilingual skill aliases.
-4. Deduplicate and rank candidates.
-5. Write a Markdown report to `outputs/pipeline/pipeline_recommendations.md`.
+不要直接把正式输出放在 `outputs/` 根目录。
 
-Example:
+## 开发和验证
 
-```bash
-python -m offerpilot.agent "run pipeline, scan last 14 days, recommend top 20 domestic jobs"
-```
-
-## Development
-
-Run tests:
+运行测试：
 
 ```bash
 source .venv/bin/activate
 python -m pytest
 ```
 
-Quick graph compile smoke test:
+检查 Agent 图是否能编译：
 
 ```bash
 python - <<'PY'
@@ -275,34 +313,47 @@ with patch("offerpilot.graph.get_llm") as get_llm:
 PY
 ```
 
-Expected output:
+期望输出：
 
 ```text
 CompiledStateGraph
 ```
 
-## Project Structure
+## 项目结构
 
 ```text
 .
 ├── offerpilot/
-│   ├── agent.py            # CLI entry
-│   ├── graph.py            # LangGraph routing and workflows
-│   ├── intent.py           # Intent classification
-│   ├── llm.py              # Multi-provider LLM initialization
-│   ├── script_loader.py    # Legacy script module loader
-│   ├── state.py            # Graph state
+│   ├── agent.py            # CLI 入口
+│   ├── graph.py            # LangGraph 路由和工作流
+│   ├── intent.py           # 意图识别
+│   ├── llm.py              # 多 provider LLM 初始化
+│   ├── script_loader.py    # legacy script 加载器
+│   ├── state.py            # 图状态
 │   └── tools.py            # Agent tools
-├── skill-pack/             # Portable workflow docs, adapters, scripts, data
+├── skill-pack/             # 工作流文档、适配器、脚本和数据
 ├── web/
-│   ├── api/                # FastAPI backend
-│   └── frontend/           # Next.js frontend
-├── tests/                  # Unit and integration tests
-├── outputs/                # Generated local outputs
-├── jds/                    # Local job descriptions
-├── data/                   # Tracker and scan history
-└── profile_store.yaml      # Local personal profile store
+│   ├── api/                # FastAPI 后端
+│   └── frontend/           # Next.js 前端
+├── tests/                  # 测试
+├── outputs/                # 本地生成结果
+├── jds/                    # 本地 JD
+├── data/                   # tracker 和扫描历史
+└── profile_store.yaml      # 本地个人素材库
 ```
+
+## 写在最后
+
+> **工作很重要。**
+> 离开学校以后，它不声不响地占据了你醒着的大部分时间。
+>
+> 但工作又没那么重要。人不是为了优化 bullet point 而来到这个世界上的。
+>
+> 你做过真实的事。你解决过真实的问题。你加过班、赶过 deadline、替别人擦过屁股，但没人好好写下来，你自己也没有。
+>
+> 这个项目改变不了你的人生。但如果它能帮一个人不再低估自己，不再把同一份万能简历投进黑洞，真正拿到一个配得上的面试机会，那就够了。
+>
+> **去拿 offer 吧。然后合上电脑，好好生活。**
 
 ## License
 
