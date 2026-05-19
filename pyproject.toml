@@ -10,7 +10,6 @@ dependencies = [
     "pypdf",
     "PyYAML",
     "python-docx",
-    "reportlab",
 ]
 
 [project.scripts]

@@ -9,6 +9,7 @@ offerpilot.egg-info/
 .kiro/
 outputs/
 jds/
-data/
+/data/
 assets/web/frontend/.next/
+web/frontend/.next/
 web/frontend/node_modules/

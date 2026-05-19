@@ -23,9 +23,6 @@ def _split_date_tail(text: str) -> tuple[str, str | None]:
     if m:
         return text[:m.start()].rstrip(), m.group(1).strip()
     return text, None
-LATIN_REGULAR_FONT = "Helvetica"
-LATIN_BOLD_FONT = "Helvetica-Bold"
-CJK_FONT = "STSong-Light"
 DEFAULT_FONT_STACK = (
     '"Inter", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", '
     '"Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif'
@@ -66,9 +63,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--style",
-        choices=["classic", "ats", "compact", "standard_cn"],
-        default="standard_cn",
-        help="PDF style to use. Default: standard_cn.",
+        choices=["classic", "ats", "compact"],
+        default="classic",
+        help="PDF style to use. Default: classic.",
     )
     parser.add_argument(
         "--photo",
@@ -468,11 +465,11 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
         font-family: {MONOSPACE_FONT_STACK};
       }}
 
-      .style-standard_cn h1.name {{
+      .style-classic h1.name {{
         text-align: center;
       }}
 
-      .style-standard_cn p.meta {{
+      .style-classic p.meta {{
         text-align: center;
       }}
 
@@ -500,19 +497,19 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
         flex-shrink: 0;
       }}
 
-      .style-standard_cn h2.section-heading {{
+      .style-classic h2.section-heading {{
         color: #1a4480;
         border-bottom: 1.2pt solid #1a4480;
         padding-bottom: 2pt;
       }}
 
-      .style-standard_cn p.emphasis {{
+      .style-classic p.emphasis {{
         color: #222222;
         border-bottom: 0.6pt dashed #cccccc;
         padding-bottom: 1.5pt;
       }}
 
-      .style-standard_cn .bullet-list li {{
+      .style-classic .bullet-list li {{
         color: #333333;
       }}
 
@@ -526,7 +523,7 @@ def _build_pdf_css(style_config: dict, *, document_type: str, style: str) -> str
         page-break-after: avoid;
       }}
 
-      .style-standard_cn h3.sub-heading {{
+      .style-classic h3.sub-heading {{
         border-bottom: 0.6pt dashed #cccccc;
         padding-bottom: 1.5pt;
       }}
@@ -655,83 +652,6 @@ def _render_html_to_pdf_with_playwright(html: str, output_path: Path) -> None:
             browser.close()
 
 
-def _render_markdown_to_pdf_with_reportlab(
-    markdown_text: str,
-    output_path: Path,
-    *,
-    document_type: str = "resume",
-    style: str = "classic",
-) -> None:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
-
-    _ensure_pdf_fonts_registered()
-
-    style_config = _get_style_config(style, document_type)
-    styles = getSampleStyleSheet()
-    latin_styles = _build_style_set(
-        styles,
-        style_config,
-        regular_font=LATIN_REGULAR_FONT,
-        emphasis_font=LATIN_BOLD_FONT,
-        style_prefix="latin",
-    )
-    cjk_styles = _build_style_set(
-        styles,
-        style_config,
-        regular_font=CJK_FONT,
-        emphasis_font=CJK_FONT,
-        style_prefix="cjk",
-    )
-
-    story = []
-    for block in _parse_markdown_blocks(markdown_text):
-        style_set = cjk_styles if _contains_cjk(block.text) else latin_styles
-
-        if block.kind == "blank":
-            story.append(Spacer(1, style_config["blank_spacer"]))
-            continue
-
-        if block.kind == "divider":
-            story.append(Spacer(1, style_config["section_break_spacer"]))
-            continue
-
-        if block.kind == "pagebreak":
-            story.append(Spacer(1, style_config["section_break_spacer"]))
-            continue
-
-        if block.kind == "heading":
-            heading_style = style_set["name"] if block.level == 1 else style_set["section"]
-            story.append(Paragraph(escape(block.text), heading_style))
-            continue
-
-        if block.kind == "bullet":
-            bullet_text = _strip_markdown_inline(block.text)
-            story.append(Paragraph(escape("- " + bullet_text), style_set["bullet"]))
-            continue
-
-        if block.kind == "meta":
-            story.append(Paragraph(escape(block.text), style_set["centered"]))
-            continue
-
-        if block.kind == "emphasis":
-            story.append(Paragraph(escape(block.text), style_set["emphasis"]))
-            continue
-
-        story.append(Paragraph(escape(_strip_markdown_inline(block.text)), style_set["normal"]))
-
-    pdf = SimpleDocTemplate(
-        str(output_path),
-        pagesize=A4,
-        rightMargin=style_config["margin_x"],
-        leftMargin=style_config["margin_x"],
-        topMargin=style_config["margin_top"],
-        bottomMargin=style_config["margin_bottom"],
-    )
-    pdf.build(story)
-
-
 def _sanitize_pdf_text(text: str) -> str:
     """Replace common Unicode punctuation with PDF-safe ASCII equivalents."""
     return text.translate(UNICODE_PDF_SAFE_TRANSLATION)
@@ -753,112 +673,31 @@ def _strip_markdown_inline(text: str) -> str:
     return text.strip()
 
 
-def _ensure_pdf_fonts_registered() -> None:
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-
-    registered_fonts = pdfmetrics.getRegisteredFontNames()
-    if CJK_FONT not in registered_fonts:
-        pdfmetrics.registerFont(UnicodeCIDFont(CJK_FONT))
-
-
-def _contains_cjk(text: str) -> bool:
-    return any("\u4e00" <= char <= "\u9fff" for char in text)
-
-
-def _build_style_set(
-    styles,
-    style_config: dict,
-    regular_font: str,
-    emphasis_font: str,
-    style_prefix: str,
-) -> dict:
-    from reportlab.lib.styles import ParagraphStyle
-
-    return {
-        "name": ParagraphStyle(
-            f"{style_prefix}_name",
-            parent=styles["Title"],
-            fontName=emphasis_font,
-            fontSize=style_config["name_font_size"],
-            leading=style_config["name_leading"],
-            alignment=style_config["header_alignment"],
-            spaceAfter=style_config["name_space_after"],
-        ),
-        "centered": ParagraphStyle(
-            f"{style_prefix}_centered",
-            parent=styles["Normal"],
-            fontName=regular_font,
-            fontSize=style_config["meta_font_size"],
-            leading=style_config["meta_leading"],
-            alignment=style_config["header_alignment"],
-            spaceAfter=style_config["meta_space_after"],
-        ),
-        "section": ParagraphStyle(
-            f"{style_prefix}_section",
-            parent=styles["Heading2"],
-            fontName=emphasis_font,
-            fontSize=style_config["section_font_size"],
-            leading=style_config["section_leading"],
-            spaceBefore=style_config["section_space_before"],
-            spaceAfter=style_config["section_space_after"],
-        ),
-        "emphasis": ParagraphStyle(
-            f"{style_prefix}_emphasis",
-            parent=styles["Normal"],
-            fontName=emphasis_font,
-            fontSize=style_config["emphasis_font_size"],
-            leading=style_config["emphasis_leading"],
-            spaceAfter=style_config["emphasis_space_after"],
-        ),
-        "bullet": ParagraphStyle(
-            f"{style_prefix}_bullet",
-            parent=styles["Normal"],
-            fontName=regular_font,
-            fontSize=style_config["body_font_size"],
-            leading=style_config["body_leading"] + (1 if regular_font == CJK_FONT else 0),
-            leftIndent=0,
-            firstLineIndent=0,
-            spaceAfter=style_config["bullet_space_after"],
-            wordWrap="CJK" if regular_font == CJK_FONT else None,
-        ),
-        "normal": ParagraphStyle(
-            f"{style_prefix}_normal",
-            parent=styles["Normal"],
-            fontName=regular_font,
-            fontSize=style_config["body_font_size"],
-            leading=style_config["body_leading"] + (1 if regular_font == CJK_FONT else 0),
-            spaceAfter=style_config["paragraph_space_after"],
-            wordWrap="CJK" if regular_font == CJK_FONT else None,
-        ),
-    }
-
-
 def _get_style_config(style: str, document_type: str) -> dict:
     base = {
-        "header_alignment": HEADER_ALIGNMENT_LEFT,
-        "margin_x": 0.72,
-        "margin_top": 0.62,
-        "margin_bottom": 0.62,
-        "name_font_size": 17,
-        "name_leading": 21,
-        "name_space_after": 6,
-        "meta_font_size": 10,
-        "meta_leading": 13,
-        "meta_space_after": 8,
+        "header_alignment": 1,
+        "margin_x": 0.7,
+        "margin_top": 0.45,
+        "margin_bottom": 0.45,
+        "name_font_size": 20,
+        "name_leading": 23,
+        "name_space_after": 2,
+        "meta_font_size": 9.5,
+        "meta_leading": 12.5,
+        "meta_space_after": 5,
         "section_font_size": 11.5,
-        "section_leading": 15,
-        "section_space_before": 7,
-        "section_space_after": 4,
-        "emphasis_font_size": 10.3,
-        "emphasis_leading": 13.5,
-        "emphasis_space_after": 2,
-        "body_font_size": 10.2,
-        "body_leading": 13.5,
+        "section_leading": 14,
+        "section_space_before": 12,
+        "section_space_after": 5,
+        "emphasis_font_size": 10,
+        "emphasis_leading": 13,
+        "emphasis_space_after": 1.5,
+        "body_font_size": 9.5,
+        "body_leading": 13,
         "bullet_space_after": 1.5,
-        "paragraph_space_after": 3,
-        "blank_spacer": 0.04,
-        "section_break_spacer": 0.06,
+        "paragraph_space_after": 2.5,
+        "blank_spacer": 0.03,
+        "section_break_spacer": 0.03,
     }
 
     if style == "ats":
@@ -896,35 +735,6 @@ def _get_style_config(style: str, document_type: str) -> dict:
                 "section_break_spacer": 0.045,
             }
         )
-    elif style == "standard_cn":
-        base.update(
-            {
-                "header_alignment": 1,  # centered
-                "margin_x": 0.7,
-                "margin_top": 0.45,
-                "margin_bottom": 0.45,
-                "name_font_size": 20,
-                "name_leading": 23,
-                "name_space_after": 2,
-                "meta_font_size": 9.5,
-                "meta_leading": 12.5,
-                "meta_space_after": 5,
-                "section_font_size": 11.5,
-                "section_leading": 14,
-                "section_space_before": 12,
-                "section_space_after": 5,
-                "emphasis_font_size": 10,
-                "emphasis_leading": 13,
-                "emphasis_space_after": 1.5,
-                "body_font_size": 9.5,
-                "body_leading": 13,
-                "bullet_space_after": 1.5,
-                "paragraph_space_after": 2.5,
-                "blank_spacer": 0.03,
-                "section_break_spacer": 0.03,
-            }
-        )
-
     if document_type == "cover_letter":
         base.update(
             {

@@ -68,7 +68,7 @@ cp skill-pack/templates/profile_store.yaml profile_store.yaml
 
 | 字段 | 说明 |
 |---|---|
-| `meta` | 姓名、邮箱、电话、更新时间 |
+| `meta` | 姓名、英文名、出生年份、邮箱、电话、更新时间 |
 | `experience` | 工作经历，每段经历包含多个 bullet |
 | `projects` | 项目经历、开源、比赛、校园项目等 |
 | `skills` | 技能、熟练度、使用年限、证据 |
@@ -108,6 +108,10 @@ python skill-pack/scripts/render_pdf.py outputs/resumes/resume.md outputs/resume
 
 # 校验输出文件命名和格式
 python skill-pack/scripts/validate_outputs.py outputs/resumes/resume.md
+
+# 校验 profile datastore 和技能别名表
+python skill-pack/scripts/validate_profile_store.py profile_store.yaml
+python skill-pack/scripts/validate_aliases.py skill-pack/data/skill_aliases.zh-en.json
 ```
 
 ## Skill Pack 结构
@@ -128,6 +132,7 @@ skill-pack/
 ├── OUTREACH.md            # LinkedIn 外联
 ├── templates/             # 本地模板
 ├── data/                  # 技能别名等辅助数据
+├── schemas/               # profile_store 和 skill aliases 的 JSON Schema
 ├── examples/              # 示例
 ├── scripts/               # 本地辅助脚本
 └── adapters/              # Cursor / Claude Code / Codex 适配器
